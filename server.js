@@ -1,6 +1,12 @@
-import {SPOTIFY_CLIENT_ID, SPOTIFY_PERMISSIONS, SPOTIFY_REDIRECT_URL} from './config';
+import express from 'express';
+import querystring from 'querystring';
+import request from 'request';
+import {BASE_UI_URL,
+  SPOTIFY_CLIENT_ID,
+  SPOTIFY_CLIENT_SECRET,
+  SPOTIFY_PERMISSIONS,
+  SPOTIFY_REDIRECT_URL} from './src/config';
 
-const express = require('express');
 const app = express();
 
 app.use(function(req, res, next) {
@@ -17,6 +23,36 @@ app.get('/login', (req, res) => {
       scope: SPOTIFY_PERMISSIONS,
       redirect_uri: SPOTIFY_REDIRECT_URL,
     }));
+});
+
+app.get('/login-callback', (req, res) => {
+  const code = req.query.code || null;
+  if(code === null) {
+    return res.redirect(BASE_UI_URL + '/#' + querystring.stringify({error: 'code_missing'}));
+  }
+
+  const requestData = {
+    url: 'https://accounts.spotify.com/api/token',
+    form: {
+      code: code,
+      redirect_uri: SPOTIFY_REDIRECT_URL,
+      grant_type: 'authorization_code'
+    },
+    headers: {
+      'Authorization': 'Basic ' + (new Buffer(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET).toString('base64'))
+    },
+    json: true
+  };
+
+  request.post(requestData, (error, response, body) => {
+    if (error || response.statusCode !== 200) {
+      return res.redirect(BASE_UI_URL + '/#' + querystring.stringify({error: 'invalid_token'}));
+    }
+
+    const {access_token, refresh_token} = body;
+    res.redirect(BASE_UI_URL + '/#' +
+      querystring.stringify({access_token: access_token, refresh_token: refresh_token}));
+  });
 });
 
 app.listen(5000, () => {
