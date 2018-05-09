@@ -7,8 +7,16 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    const accessToken = new URL(window.location.href).searchParams.get('access_token');
-    fetch((BASE_API_URL + '/playlists?accessToken=' + accessToken), {
+    const params = new URL(window.location.href).searchParams;
+    const accessToken = params.get('access_token');
+    const userId = params.get('user_id');
+
+    this.state = {
+      accessToken,
+      userId,
+    }
+
+    fetch((BASE_API_URL + '/playlists?accessToken=' + accessToken + '&userId=' + userId), {
       headers: {'content-type': 'application/json'},
     })
       .then(response => response.json())
@@ -16,25 +24,25 @@ class App extends Component {
         const playlists = response.items.map((playlist) => {
           return {id: playlist.id, name: playlist.name};
         });
-        this.setState({...this.state, playlists});
+        this.setState({playlists});
       });
-
-    this.state = {
-      accessToken,
-    }
   }
 
   compilePlaylist = (event) => {
     const playlistId = event.target.dataset.id;
     console.log('target: ', event.target.dataset.id);
 
-    // fetch((BASE_API_URL + '/compile-playlist?accessToken=' + this.state.accessToken + '&id=' + playlistId), {
-    //   headers: {'content-type': 'application/json'},
-    // })
-    //   .then(response => response.json())
-    //   .then(response => {
-    //     console.log('response: ', response);
-    //   });
+    fetch((BASE_API_URL +
+      '/compile-playlist?accessToken=' + this.state.accessToken +
+      '&playlistId=' + playlistId +
+      '&userId=' + this.state.userId
+    ), {
+      headers: {'content-type': 'application/json'},
+    })
+      .then(response => response.json())
+      .then(response => {
+        console.log('compile playlist response: ', response);
+      });
   }
 
   render() {

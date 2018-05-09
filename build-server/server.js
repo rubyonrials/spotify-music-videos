@@ -42,8 +42,8 @@ app.get('/login', function (req, res) {
 });
 
 app.get('/login-callback', function (req, res) {
-  var code = req.query.code || null;
-  if (code === null) {
+  var code = req.query.code;
+  if (!code) {
     return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'code_missing' }));
   }
 
@@ -68,14 +68,30 @@ app.get('/login-callback', function (req, res) {
     var access_token = body.access_token,
         refresh_token = body.refresh_token;
 
-    res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ access_token: access_token, refresh_token: refresh_token }));
+    requestData = {
+      url: 'https://api.spotify.com/v1/me',
+      headers: { 'Authorization': 'Bearer ' + access_token },
+      json: true
+    };
+
+    _request2.default.get(requestData, function (error, response, body) {
+      if (error || response.statusCode !== 200) {
+        return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: error }));
+      }
+
+      res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({
+        access_token: access_token,
+        refresh_token: refresh_token,
+        user_id: body.id
+      }));
+    });
   });
 });
 
 app.get('/playlists', function (req, res) {
-  var accessToken = req.query.accessToken || null;
+  var accessToken = req.query.accessToken;
   var offset = req.query.offset || 0;
-  if (accessToken === null) {
+  if (!accessToken) {
     return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'access_token_missing' }));
   }
 
@@ -92,11 +108,44 @@ app.get('/playlists', function (req, res) {
       return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: error }));
     }
 
-    // console.log('body: ', body);
     res.json(body);
+  });
+});
+
+app.get('/compile-playlist', function (req, res) {
+  var accessToken = req.query.accessToken;
+  var playlistId = req.query.playlistId;
+  var userId = req.query.userId;
+
+  if (!accessToken || !playlistId || !userId) {
+    return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'params_missing' }));
+  }
+
+  var requestData = {
+    url: 'https://api.spotify.com/v1/users/' + userId + '/playlists/' + playlistId + '/tracks',
+    headers: {
+      'Authorization': 'Bearer ' + accessToken.toString('base64')
+    },
+    json: true
+  };
+
+  _request2.default.get(requestData, function (error, response, body) {
+    if (error || response.statusCode !== 200) {
+      return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: error }));
+    }
+
+    var tracks = body.items.map(function (track) {
+      return { name: track.track.name };
+    });
+
+    res.json(tracks);
   });
 });
 
 app.listen(5000, function () {
   console.log('spotify-music-videos server listening on port 5000');
 });
+
+// dont request all parts of tracks for playlist
+// get artist names to send to youtube
+// promises instead of chained callbacks
