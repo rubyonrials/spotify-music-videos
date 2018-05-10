@@ -28,7 +28,10 @@ class App extends Component {
         });
         this.setState({playlists});
       })
-      .catch(() => {this.setState({accessToken: null, userId: null})});
+      .catch((error) => {
+        this.setState({error: error.message});
+        // this.setState({accessToken: null, userId: null}));
+      });
   }
 
   compilePlaylist = (event) => {

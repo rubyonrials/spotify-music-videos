@@ -62,11 +62,22 @@ function getAuthTokens(code) {
 }
 
 function getUserId(accessToken) {
-  console.log('access token: ', accessToken);
   var requestData = {
     url: 'https://api.spotify.com/v1/me',
     method: 'GET',
     headers: { 'Authorization': 'Bearer ' + accessToken },
+    json: true
+  };
+  return makeRequest(requestData);
+}
+
+function getPlaylists(accessToken, offset) {
+  var requestData = {
+    url: 'https://api.spotify.com/v1/me/playlists?limit=50&offset=' + offset,
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + accessToken.toString('base64')
+    },
     json: true
   };
   return makeRequest(requestData);
@@ -122,7 +133,7 @@ app.get('/login-callback', function () {
           case 6:
             _ref2 = _context.sent;
             accessToken = _ref2.access_token;
-            refreshToken = _ref2.refreshToken;
+            refreshToken = _ref2.refresh_token;
             _context.next = 11;
             return getUserId(accessToken);
 
@@ -158,30 +169,53 @@ app.get('/login-callback', function () {
   };
 }());
 
-app.get('/playlists', function (req, res) {
-  var accessToken = req.query.accessToken;
-  var offset = req.query.offset || 0;
-  if (!accessToken || accessToken === '') {
-    return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'access_token_missing' }));
-  }
+app.get('/playlists', function () {
+  var _ref4 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee2(req, res) {
+    var accessToken, offset, playlists;
+    return _regenerator2.default.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            accessToken = req.query.accessToken;
+            offset = req.query.offset || 0;
 
-  var requestData = {
-    url: 'https://api.spotify.com/v1/me/playlists?limit=50&offset=' + offset,
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + accessToken.toString('base64')
-    },
-    json: true
+            if (!(!accessToken || accessToken === '')) {
+              _context2.next = 4;
+              break;
+            }
+
+            return _context2.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'access_token_missing' })));
+
+          case 4:
+            _context2.prev = 4;
+            _context2.next = 7;
+            return getPlaylists(accessToken, offset);
+
+          case 7:
+            playlists = _context2.sent;
+
+            res.json(playlists);
+            _context2.next = 14;
+            break;
+
+          case 11:
+            _context2.prev = 11;
+            _context2.t0 = _context2['catch'](4);
+
+            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context2.t0 }));
+
+          case 14:
+          case 'end':
+            return _context2.stop();
+        }
+      }
+    }, _callee2, undefined, [[4, 11]]);
+  }));
+
+  return function (_x3, _x4) {
+    return _ref4.apply(this, arguments);
   };
-
-  (0, _request2.default)(requestData, function (error, response, body) {
-    if (error || response.statusCode !== 200) {
-      return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: error }));
-    }
-
-    res.json(body);
-  });
-});
+}());
 
 app.get('/compile-playlist', function (req, res) {
   var accessToken = req.query.accessToken;

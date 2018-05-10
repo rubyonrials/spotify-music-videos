@@ -47,11 +47,22 @@ function getAuthTokens(code) {
 }
 
 function getUserId(accessToken) {
-  console.log('access token: ', accessToken);
   const requestData = {
     url: 'https://api.spotify.com/v1/me',
     method: 'GET',
     headers: { 'Authorization': 'Bearer ' + accessToken },
+    json: true
+  };
+  return makeRequest(requestData);
+}
+
+function getPlaylists(accessToken, offset) {
+  const requestData = {
+    url: `https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`,
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + (accessToken.toString('base64'))
+    },
     json: true
   };
   return makeRequest(requestData);
@@ -104,29 +115,19 @@ app.get('/login-callback', async (req, res) => {
   }
 });
 
-app.get('/playlists', (req, res) => {
+app.get('/playlists', async (req, res) => {
   const accessToken = req.query.accessToken;
   const offset = req.query.offset || 0;
   if(!accessToken || accessToken === '') {
     return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'access_token_missing'}));
   }
 
-  const requestData = {
-    url: `https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`,
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + (accessToken.toString('base64'))
-    },
-    json: true
-  };
-
-  request(requestData, (error, response, body) => {
-    if (error || response.statusCode !== 200) {
-      return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: error}));
-    }
-
-    res.json(body);
-  });
+  try {
+    const playlists = await getPlaylists(accessToken, offset);
+    res.json(playlists);
+  } catch(error) {
+    res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
+  }
 });
 
 app.get('/compile-playlist', (req, res) => {
