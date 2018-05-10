@@ -10,3 +10,5 @@ var SPOTIFY_CLIENT_ID = exports.SPOTIFY_CLIENT_ID = '5321c377d4bd47e8b5a631dc517
 var SPOTIFY_CLIENT_SECRET = exports.SPOTIFY_CLIENT_SECRET = '2e95f82e35dd4e60a8a31c00b414aaca';
 var SPOTIFY_REDIRECT_URL = exports.SPOTIFY_REDIRECT_URL = 'http://localhost:5000/login-callback';
 var SPOTIFY_PERMISSIONS = exports.SPOTIFY_PERMISSIONS = ['user-library-read', 'playlist-read-collaborative', 'playlist-read-private'];
+
+var YOUTUBE_API_KEY = exports.YOUTUBE_API_KEY = 'AIzaSyBgMOehjTyS4lRZBZii75IU-B-ujG2IWFo';

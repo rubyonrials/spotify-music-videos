@@ -8,12 +8,14 @@ class App extends Component {
     super(props);
 
     const params = new URL(window.location.href).searchParams;
-    const accessToken = params.get('access_token');
-    const userId = params.get('user_id');
+    const accessToken = params.get('accessToken');
+    const userId = params.get('userId');
+    const error = params.get('error');
 
     this.state = {
       accessToken,
       userId,
+      error,
     }
 
     fetch((BASE_API_URL + '/playlists?accessToken=' + accessToken + '&userId=' + userId), {
@@ -25,7 +27,8 @@ class App extends Component {
           return {id: playlist.id, name: playlist.name};
         });
         this.setState({playlists});
-      });
+      })
+      .catch(() => {this.setState({accessToken: null, userId: null})});
   }
 
   compilePlaylist = (event) => {
@@ -53,10 +56,14 @@ class App extends Component {
           <h1 className="App-title">Welcome to spotify-music-videos</h1>
         </header>
         <div className="App-intro">
-            <div>
-              <p>First, log in to Spotify.</p>
-              <a href={BASE_API_URL + '/login'}>Log in</a>
-            </div>
+          <div>
+            <p>First, log in to Spotify.</p>
+            <a href={BASE_API_URL + '/login'}>Log in</a>
+          </div>
+
+          {this.state.error &&
+            <p style={{color: 'red'}}>{this.state.error}</p>
+          }
 
           {this.state.playlists &&
             <div>

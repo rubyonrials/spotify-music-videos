@@ -7,6 +7,56 @@ import {BASE_UI_URL,
   SPOTIFY_PERMISSIONS,
   SPOTIFY_REDIRECT_URL} from './src/config';
 
+function makeRequest(requestData) {
+  return new Promise((resolve, reject) => {
+    request(requestData, (error, response, body) => {
+      console.log('status: ', response.statusCode);
+      if (!error && response.statusCode === 200) {
+        console.log('1');
+        console.log('resolve body: ', body);
+        resolve(body);
+      } else if(body.error) {
+        console.log('2');
+        console.log('error body: ', body);
+        reject(body.error_description);
+      } else {
+        console.log('3');
+        console.log('error body: ', body);
+        console.log('error : ', error);
+        reject(error);
+      }
+    });
+  });
+}
+
+function getAuthTokens(code) {
+  const requestData = {
+    url: 'https://accounts.spotify.com/api/token',
+    method: 'POST',
+    form: {
+      code: code,
+      redirect_uri: SPOTIFY_REDIRECT_URL,
+      grant_type: 'authorization_code'
+    },
+    headers: {
+      'Authorization': 'Basic ' + (new Buffer(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET).toString('base64'))
+    },
+    json: true
+  };
+  return makeRequest(requestData);
+}
+
+function getUserId(accessToken) {
+  console.log('access token: ', accessToken);
+  const requestData = {
+    url: 'https://api.spotify.com/v1/me',
+    method: 'GET',
+    headers: { 'Authorization': 'Bearer ' + accessToken },
+    json: true
+  };
+  return makeRequest(requestData);
+}
+
 const app = express();
 
 app.use((req, res, next) => {
@@ -33,70 +83,46 @@ app.get('/login', (req, res) => {
     }));
 });
 
-app.get('/login-callback', (req, res) => {
+app.get('/login-callback', async (req, res) => {
   const code = req.query.code;
   if(!code) {
     return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'code_missing'}));
   }
 
-  let requestData = {
-    url: 'https://accounts.spotify.com/api/token',
-    form: {
-      code: code,
-      redirect_uri: SPOTIFY_REDIRECT_URL,
-      grant_type: 'authorization_code'
-    },
-    headers: {
-      'Authorization': 'Basic ' + (new Buffer(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET).toString('base64'))
-    },
-    json: true
-  };
+  try {
+    const {access_token: accessToken, refresh_token: refreshToken} = await getAuthTokens(code);
+    const {id: userId} = await getUserId(accessToken);
 
-  request.post(requestData, (error, response, body) => {
-    if (error || response.statusCode !== 200) {
-      return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'invalid_token'}));
-    }
-
-    const {access_token, refresh_token} = body;
-    requestData = {
-      url: 'https://api.spotify.com/v1/me',
-      headers: { 'Authorization': 'Bearer ' + access_token },
-      json: true
-    };
-
-    request.get(requestData, (error, response, body) => {
-      if (error || response.statusCode !== 200) {
-        return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
-      }
-
-      res.redirect(BASE_UI_URL + '?' +
-        querystring.stringify({
-          access_token: access_token,
-          refresh_token: refresh_token,
-          user_id: body.id,
-        }));
-    });
-  });
+    res.redirect(BASE_UI_URL + '?' +
+      querystring.stringify({
+        accessToken,
+        refreshToken,
+        userId,
+      }));
+  } catch(error) {
+    res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
+  }
 });
 
 app.get('/playlists', (req, res) => {
   const accessToken = req.query.accessToken;
   const offset = req.query.offset || 0;
-  if(!accessToken) {
+  if(!accessToken || accessToken === '') {
     return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'access_token_missing'}));
   }
 
   const requestData = {
     url: `https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`,
+    method: 'GET',
     headers: {
       'Authorization': 'Bearer ' + (accessToken.toString('base64'))
     },
     json: true
   };
 
-  request.get(requestData, (error, response, body) => {
+  request(requestData, (error, response, body) => {
     if (error || response.statusCode !== 200) {
-      return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
+      return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: error}));
     }
 
     res.json(body);
@@ -114,15 +140,16 @@ app.get('/compile-playlist', (req, res) => {
 
   const requestData = {
     url: `https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks`,
+    method: 'GET',
     headers: {
       'Authorization': 'Bearer ' + (accessToken.toString('base64'))
     },
     json: true
   };
 
-  request.get(requestData, (error, response, body) => {
+  request(requestData, (error, response, body) => {
     if (error || response.statusCode !== 200) {
-      return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
+      return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: error.message}));
     }
 
     const tracks = body.items.map((track) => {
