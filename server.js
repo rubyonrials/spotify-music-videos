@@ -10,20 +10,12 @@ import {BASE_UI_URL,
 function makeRequest(requestData) {
   return new Promise((resolve, reject) => {
     request(requestData, (error, response, body) => {
-      console.log('status: ', response.statusCode);
       if (!error && response.statusCode === 200) {
-        console.log('1');
-        console.log('resolve body: ', body);
         resolve(body);
-      } else if(body.error) {
-        console.log('2');
-        console.log('error body: ', body);
-        reject(body.error_description);
-      } else {
-        console.log('3');
-        console.log('error body: ', body);
-        console.log('error : ', error);
+      } else if(error) {
         reject(error);
+      } else {
+        reject(body.error_description);
       }
     });
   });
@@ -66,6 +58,22 @@ function getPlaylists(accessToken, offset) {
     json: true
   };
   return makeRequest(requestData);
+}
+
+async function getTracks(accessToken, userId, playlistId) {
+  const requestData = {
+    url: `https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks`,
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + (accessToken.toString('base64'))
+    },
+    json: true
+  };
+
+  const requestResponse = await makeRequest(requestData);
+  return requestResponse.items.map((track) => {
+    return {name: track.track.name};
+  });
 }
 
 const app = express();
@@ -130,35 +138,21 @@ app.get('/playlists', async (req, res) => {
   }
 });
 
-app.get('/compile-playlist', (req, res) => {
+app.get('/compile-playlist', async (req, res) => {
   const accessToken = req.query.accessToken;
-  const playlistId = req.query.playlistId;
   const userId = req.query.userId;
+  const playlistId = req.query.playlistId;
 
-  if(!accessToken || !playlistId || !userId) {
+  if(!accessToken || !userId || !playlistId) {
     return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'params_missing'}));
   }
 
-  const requestData = {
-    url: `https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks`,
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + (accessToken.toString('base64'))
-    },
-    json: true
-  };
-
-  request(requestData, (error, response, body) => {
-    if (error || response.statusCode !== 200) {
-      return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: error.message}));
-    }
-
-    const tracks = body.items.map((track) => {
-      return {name: track.track.name};
-    });
-
+  try {
+    const tracks = await getTracks(accessToken, userId, playlistId);
     res.json(tracks);
-  });
+  } catch(error) {
+    res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
+  }
 });
 
 app.listen(5000, () => {

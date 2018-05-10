@@ -4,6 +4,43 @@ var _regenerator = require('babel-runtime/regenerator');
 
 var _regenerator2 = _interopRequireDefault(_regenerator);
 
+var getTracks = function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee(accessToken, userId, playlistId) {
+    var requestData, requestResponse;
+    return _regenerator2.default.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            requestData = {
+              url: 'https://api.spotify.com/v1/users/' + userId + '/playlists/' + playlistId + '/tracks',
+              method: 'GET',
+              headers: {
+                'Authorization': 'Bearer ' + accessToken.toString('base64')
+              },
+              json: true
+            };
+            _context.next = 3;
+            return makeRequest(requestData);
+
+          case 3:
+            requestResponse = _context.sent;
+            return _context.abrupt('return', requestResponse.items.map(function (track) {
+              return { name: track.track.name };
+            }));
+
+          case 5:
+          case 'end':
+            return _context.stop();
+        }
+      }
+    }, _callee, this);
+  }));
+
+  return function getTracks(_x, _x2, _x3) {
+    return _ref.apply(this, arguments);
+  };
+}();
+
 var _express = require('express');
 
 var _express2 = _interopRequireDefault(_express);
@@ -109,37 +146,37 @@ app.get('/login', function (req, res) {
 });
 
 app.get('/login-callback', function () {
-  var _ref = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee(req, res) {
-    var code, _ref2, accessToken, refreshToken, _ref3, userId;
+  var _ref2 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee2(req, res) {
+    var code, _ref3, accessToken, refreshToken, _ref4, userId;
 
-    return _regenerator2.default.wrap(function _callee$(_context) {
+    return _regenerator2.default.wrap(function _callee2$(_context2) {
       while (1) {
-        switch (_context.prev = _context.next) {
+        switch (_context2.prev = _context2.next) {
           case 0:
             code = req.query.code;
 
             if (code) {
-              _context.next = 3;
+              _context2.next = 3;
               break;
             }
 
-            return _context.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'code_missing' })));
+            return _context2.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'code_missing' })));
 
           case 3:
-            _context.prev = 3;
-            _context.next = 6;
+            _context2.prev = 3;
+            _context2.next = 6;
             return getAuthTokens(code);
 
           case 6:
-            _ref2 = _context.sent;
-            accessToken = _ref2.access_token;
-            refreshToken = _ref2.refresh_token;
-            _context.next = 11;
+            _ref3 = _context2.sent;
+            accessToken = _ref3.access_token;
+            refreshToken = _ref3.refresh_token;
+            _context2.next = 11;
             return getUserId(accessToken);
 
           case 11:
-            _ref3 = _context.sent;
-            userId = _ref3.id;
+            _ref4 = _context2.sent;
+            userId = _ref4.id;
 
 
             res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({
@@ -147,106 +184,124 @@ app.get('/login-callback', function () {
               refreshToken: refreshToken,
               userId: userId
             }));
-            _context.next = 19;
+            _context2.next = 19;
             break;
 
           case 16:
-            _context.prev = 16;
-            _context.t0 = _context['catch'](3);
+            _context2.prev = 16;
+            _context2.t0 = _context2['catch'](3);
 
-            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context.t0 }));
+            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context2.t0 }));
 
           case 19:
           case 'end':
-            return _context.stop();
+            return _context2.stop();
         }
       }
-    }, _callee, undefined, [[3, 16]]);
+    }, _callee2, undefined, [[3, 16]]);
   }));
 
-  return function (_x, _x2) {
-    return _ref.apply(this, arguments);
+  return function (_x4, _x5) {
+    return _ref2.apply(this, arguments);
   };
 }());
 
 app.get('/playlists', function () {
-  var _ref4 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee2(req, res) {
+  var _ref5 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee3(req, res) {
     var accessToken, offset, playlists;
-    return _regenerator2.default.wrap(function _callee2$(_context2) {
+    return _regenerator2.default.wrap(function _callee3$(_context3) {
       while (1) {
-        switch (_context2.prev = _context2.next) {
+        switch (_context3.prev = _context3.next) {
           case 0:
             accessToken = req.query.accessToken;
             offset = req.query.offset || 0;
 
             if (!(!accessToken || accessToken === '')) {
-              _context2.next = 4;
+              _context3.next = 4;
               break;
             }
 
-            return _context2.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'access_token_missing' })));
+            return _context3.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'access_token_missing' })));
 
           case 4:
-            _context2.prev = 4;
-            _context2.next = 7;
+            _context3.prev = 4;
+            _context3.next = 7;
             return getPlaylists(accessToken, offset);
 
           case 7:
-            playlists = _context2.sent;
+            playlists = _context3.sent;
 
             res.json(playlists);
-            _context2.next = 14;
+            _context3.next = 14;
             break;
 
           case 11:
-            _context2.prev = 11;
-            _context2.t0 = _context2['catch'](4);
+            _context3.prev = 11;
+            _context3.t0 = _context3['catch'](4);
 
-            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context2.t0 }));
+            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context3.t0 }));
 
           case 14:
           case 'end':
-            return _context2.stop();
+            return _context3.stop();
         }
       }
-    }, _callee2, undefined, [[4, 11]]);
+    }, _callee3, undefined, [[4, 11]]);
   }));
 
-  return function (_x3, _x4) {
-    return _ref4.apply(this, arguments);
+  return function (_x6, _x7) {
+    return _ref5.apply(this, arguments);
   };
 }());
 
-app.get('/compile-playlist', function (req, res) {
-  var accessToken = req.query.accessToken;
-  var playlistId = req.query.playlistId;
-  var userId = req.query.userId;
+app.get('/compile-playlist', function () {
+  var _ref6 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee4(req, res) {
+    var accessToken, userId, playlistId, tracks;
+    return _regenerator2.default.wrap(function _callee4$(_context4) {
+      while (1) {
+        switch (_context4.prev = _context4.next) {
+          case 0:
+            accessToken = req.query.accessToken;
+            userId = req.query.userId;
+            playlistId = req.query.playlistId;
 
-  if (!accessToken || !playlistId || !userId) {
-    return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'params_missing' }));
-  }
+            if (!(!accessToken || !userId || !playlistId)) {
+              _context4.next = 5;
+              break;
+            }
 
-  var requestData = {
-    url: 'https://api.spotify.com/v1/users/' + userId + '/playlists/' + playlistId + '/tracks',
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + accessToken.toString('base64')
-    },
-    json: true
+            return _context4.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'params_missing' })));
+
+          case 5:
+            _context4.prev = 5;
+            _context4.next = 8;
+            return getTracks(accessToken, userId, playlistId);
+
+          case 8:
+            tracks = _context4.sent;
+
+            res.json(tracks);
+            _context4.next = 15;
+            break;
+
+          case 12:
+            _context4.prev = 12;
+            _context4.t0 = _context4['catch'](5);
+
+            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context4.t0 }));
+
+          case 15:
+          case 'end':
+            return _context4.stop();
+        }
+      }
+    }, _callee4, undefined, [[5, 12]]);
+  }));
+
+  return function (_x8, _x9) {
+    return _ref6.apply(this, arguments);
   };
-
-  (0, _request2.default)(requestData, function (error, response, body) {
-    if (error || response.statusCode !== 200) {
-      return res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: error.message }));
-    }
-
-    var tracks = body.items.map(function (track) {
-      return { name: track.track.name };
-    });
-
-    res.json(tracks);
-  });
-});
+}());
 
 app.listen(5000, function () {
   console.log('spotify-music-videos server listening on port 5000');
