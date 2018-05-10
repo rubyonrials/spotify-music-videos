@@ -1,11 +1,31 @@
 import express from 'express';
 import querystring from 'querystring';
 import request from 'request';
+import {google} from 'googleapis';
 import {BASE_UI_URL,
   SPOTIFY_CLIENT_ID,
   SPOTIFY_CLIENT_SECRET,
   SPOTIFY_PERMISSIONS,
-  SPOTIFY_REDIRECT_URL} from './src/config';
+  SPOTIFY_REDIRECT_URL,
+  YOUTUBE_API_KEY} from './src/config';
+
+const youtube = google.youtube({
+  version: 'v3',
+  auth: YOUTUBE_API_KEY,
+});
+
+async function runSample() {
+  const res = await youtube.search.list({
+    part: 'id,snippet',
+    q: 'MotorSport Migos Music Video',
+    maxResults: 3,
+    type: 'video',
+  });
+  console.log(res.data.items[0].snippet.title);
+  console.log(`https://www.youtube.com/watch?v=${res.data.items[0].id.videoId}`);
+}
+
+runSample();
 
 function makeRequest(requestData) {
   return new Promise((resolve, reject) => {
