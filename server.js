@@ -2,6 +2,7 @@ import express from 'express';
 import querystring from 'querystring';
 import request from 'request';
 import {google} from 'googleapis';
+import util from 'util';
 import {BASE_UI_URL,
   SPOTIFY_CLIENT_ID,
   SPOTIFY_CLIENT_SECRET,
@@ -150,27 +151,42 @@ async function createYoutubePlaylist(playlistName) {
   }
 }
 
-async function addToYoutubePlaylist(playlistId, videoId) {
-  const res = await youtube.playlistItems.insert({
-    part: 'id,snippet',
-      resource: {
-          snippet: {
-              playlistId,
-              resourceId:{
-                  videoId,
-                  kind:"youtube#video"
-              }
-          }
+function addToYoutubePlaylist(playlistId, videoId) {
+  youtube.playlistItems.insert({
+    part: 'snippet',
+    resource: {
+      snippet: {
+        playlistId,
+        resourceId: {
+          videoId,
+          kind: 'youtube#video'
+        }
       }
+    }
+  });
+}
+
+async function insertVideosIntoPlaylist(playlistId, videoIds) {
+  let index = 0;
+
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(() => {
+      if(index == videoIds.length) {
+        clearInterval(interval);
+        resolve();
+      } else {
+        addToYoutubePlaylist(playlistId, videoIds[index]);
+        index += 1;
+      }
+    }, 1000);
   });
 }
 
 async function makeYoutubePlaylist(tracks, playlistName) {
   const videoIds = await getYoutubeVideoIds(tracks);
   const playlistId = await createYoutubePlaylist(playlistName);
-  await Promise.all(
-    videoIds.map(async (videoId) => await addToYoutubePlaylist(playlistId, videoId))
-  );
+  await insertVideosIntoPlaylist(playlistId, videoIds);
+
   return `https://www.youtube.com/watch?list=${playlistId}&v=${videoIds[0]}`;
 }
 
@@ -261,5 +277,5 @@ app.listen(5000, () => {
 
 // dont request all parts of tracks for playlist
 // get artist names to send to youtube
-// promises instead of chained callbacks
-// catch expired token
+// catch expired token, other error handling
+// good spinner that shoes each video being added

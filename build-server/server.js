@@ -167,31 +167,27 @@ var createYoutubePlaylist = function () {
   };
 }();
 
-var addToYoutubePlaylist = function () {
-  var _ref6 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee6(playlistId, videoId) {
-    var res;
+var insertVideosIntoPlaylist = function () {
+  var _ref6 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee6(playlistId, videoIds) {
+    var index;
     return _regenerator2.default.wrap(function _callee6$(_context6) {
       while (1) {
         switch (_context6.prev = _context6.next) {
           case 0:
-            _context6.next = 2;
-            return youtube.playlistItems.insert({
-              part: 'id,snippet',
-              resource: {
-                snippet: {
-                  playlistId: playlistId,
-                  resourceId: {
-                    videoId: videoId,
-                    kind: "youtube#video"
-                  }
+            index = 0;
+            return _context6.abrupt('return', new Promise(function (resolve, reject) {
+              var interval = setInterval(function () {
+                if (index == videoIds.length) {
+                  clearInterval(interval);
+                  resolve();
+                } else {
+                  addToYoutubePlaylist(playlistId, videoIds[index]);
+                  index += 1;
                 }
-              }
-            });
+              }, 1000);
+            }));
 
           case 2:
-            res = _context6.sent;
-
-          case 3:
           case 'end':
             return _context6.stop();
         }
@@ -199,65 +195,40 @@ var addToYoutubePlaylist = function () {
     }, _callee6, this);
   }));
 
-  return function addToYoutubePlaylist(_x8, _x9) {
+  return function insertVideosIntoPlaylist(_x8, _x9) {
     return _ref6.apply(this, arguments);
   };
 }();
 
 var makeYoutubePlaylist = function () {
-  var _ref7 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee8(tracks, playlistName) {
-    var _this2 = this;
-
+  var _ref7 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee7(tracks, playlistName) {
     var videoIds, playlistId;
-    return _regenerator2.default.wrap(function _callee8$(_context8) {
+    return _regenerator2.default.wrap(function _callee7$(_context7) {
       while (1) {
-        switch (_context8.prev = _context8.next) {
+        switch (_context7.prev = _context7.next) {
           case 0:
-            _context8.next = 2;
+            _context7.next = 2;
             return getYoutubeVideoIds(tracks);
 
           case 2:
-            videoIds = _context8.sent;
-            _context8.next = 5;
+            videoIds = _context7.sent;
+            _context7.next = 5;
             return createYoutubePlaylist(playlistName);
 
           case 5:
-            playlistId = _context8.sent;
-            _context8.next = 8;
-            return Promise.all(videoIds.map(function () {
-              var _ref8 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee7(videoId) {
-                return _regenerator2.default.wrap(function _callee7$(_context7) {
-                  while (1) {
-                    switch (_context7.prev = _context7.next) {
-                      case 0:
-                        _context7.next = 2;
-                        return addToYoutubePlaylist(playlistId, videoId);
-
-                      case 2:
-                        return _context7.abrupt('return', _context7.sent);
-
-                      case 3:
-                      case 'end':
-                        return _context7.stop();
-                    }
-                  }
-                }, _callee7, _this2);
-              }));
-
-              return function (_x12) {
-                return _ref8.apply(this, arguments);
-              };
-            }()));
+            playlistId = _context7.sent;
+            _context7.next = 8;
+            return insertVideosIntoPlaylist(playlistId, videoIds);
 
           case 8:
-            return _context8.abrupt('return', 'https://www.youtube.com/watch?list=' + playlistId + '&v=' + videoIds[0]);
+            return _context7.abrupt('return', 'https://www.youtube.com/watch?list=' + playlistId + '&v=' + videoIds[0]);
 
           case 9:
           case 'end':
-            return _context8.stop();
+            return _context7.stop();
         }
       }
-    }, _callee8, this);
+    }, _callee7, this);
   }));
 
   return function makeYoutubePlaylist(_x10, _x11) {
@@ -278,6 +249,10 @@ var _request = require('request');
 var _request2 = _interopRequireDefault(_request);
 
 var _googleapis = require('googleapis');
+
+var _util = require('util');
+
+var _util2 = _interopRequireDefault(_util);
 
 var _config = require('./src/config');
 
@@ -362,6 +337,21 @@ function getPlaylists(accessToken, offset) {
   return makeRequest(requestData);
 }
 
+function addToYoutubePlaylist(playlistId, videoId) {
+  youtube.playlistItems.insert({
+    part: 'snippet',
+    resource: {
+      snippet: {
+        playlistId: playlistId,
+        resourceId: {
+          videoId: videoId,
+          kind: 'youtube#video'
+        }
+      }
+    }
+  });
+}
+
 var app = (0, _express2.default)();
 
 app.use(function (req, res, next) {
@@ -388,37 +378,37 @@ app.get('/login', function (req, res) {
 });
 
 app.get('/login-callback', function () {
-  var _ref9 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee9(req, res) {
-    var code, _ref10, accessToken, refreshToken, _ref11, userId;
+  var _ref8 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee8(req, res) {
+    var code, _ref9, accessToken, refreshToken, _ref10, userId;
 
-    return _regenerator2.default.wrap(function _callee9$(_context9) {
+    return _regenerator2.default.wrap(function _callee8$(_context8) {
       while (1) {
-        switch (_context9.prev = _context9.next) {
+        switch (_context8.prev = _context8.next) {
           case 0:
             code = req.query.code;
 
             if (code) {
-              _context9.next = 3;
+              _context8.next = 3;
               break;
             }
 
-            return _context9.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'code_missing' })));
+            return _context8.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'code_missing' })));
 
           case 3:
-            _context9.prev = 3;
-            _context9.next = 6;
+            _context8.prev = 3;
+            _context8.next = 6;
             return getAuthTokens(code);
 
           case 6:
-            _ref10 = _context9.sent;
-            accessToken = _ref10.access_token;
-            refreshToken = _ref10.refresh_token;
-            _context9.next = 11;
+            _ref9 = _context8.sent;
+            accessToken = _ref9.access_token;
+            refreshToken = _ref9.refresh_token;
+            _context8.next = 11;
             return getUserId(accessToken);
 
           case 11:
-            _ref11 = _context9.sent;
-            userId = _ref11.id;
+            _ref10 = _context8.sent;
+            userId = _ref10.id;
 
 
             res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({
@@ -426,83 +416,82 @@ app.get('/login-callback', function () {
               refreshToken: refreshToken,
               userId: userId
             }));
-            _context9.next = 19;
+            _context8.next = 19;
             break;
 
           case 16:
-            _context9.prev = 16;
-            _context9.t0 = _context9['catch'](3);
+            _context8.prev = 16;
+            _context8.t0 = _context8['catch'](3);
 
-            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context9.t0 }));
+            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context8.t0 }));
 
           case 19:
           case 'end':
-            return _context9.stop();
+            return _context8.stop();
         }
       }
-    }, _callee9, undefined, [[3, 16]]);
+    }, _callee8, undefined, [[3, 16]]);
   }));
 
-  return function (_x13, _x14) {
-    return _ref9.apply(this, arguments);
+  return function (_x12, _x13) {
+    return _ref8.apply(this, arguments);
   };
 }());
 
 app.get('/playlists', function () {
-  var _ref12 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee10(req, res) {
+  var _ref11 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee9(req, res) {
     var accessToken, offset, playlists;
-    return _regenerator2.default.wrap(function _callee10$(_context10) {
+    return _regenerator2.default.wrap(function _callee9$(_context9) {
       while (1) {
-        switch (_context10.prev = _context10.next) {
+        switch (_context9.prev = _context9.next) {
           case 0:
             accessToken = req.query.accessToken;
             offset = req.query.offset || 0;
 
             if (!(!accessToken || accessToken === '')) {
-              _context10.next = 4;
+              _context9.next = 4;
               break;
             }
 
-            return _context10.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'access_token_missing' })));
+            return _context9.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'access_token_missing' })));
 
           case 4:
-            _context10.prev = 4;
-            _context10.next = 7;
+            _context9.prev = 4;
+            _context9.next = 7;
             return getPlaylists(accessToken, offset);
 
           case 7:
-            playlists = _context10.sent;
+            playlists = _context9.sent;
 
             res.json(playlists);
-            _context10.next = 14;
+            _context9.next = 14;
             break;
 
           case 11:
-            _context10.prev = 11;
-            _context10.t0 = _context10['catch'](4);
+            _context9.prev = 11;
+            _context9.t0 = _context9['catch'](4);
 
-            // res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
-            res.json({ error: _context10.t0 });
+            res.json({ error: _context9.t0 });
 
           case 14:
           case 'end':
-            return _context10.stop();
+            return _context9.stop();
         }
       }
-    }, _callee10, undefined, [[4, 11]]);
+    }, _callee9, undefined, [[4, 11]]);
   }));
 
-  return function (_x15, _x16) {
-    return _ref12.apply(this, arguments);
+  return function (_x14, _x15) {
+    return _ref11.apply(this, arguments);
   };
 }());
 
 app.get('/compile-playlist', function () {
-  var _ref13 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee11(req, res) {
+  var _ref12 = _asyncToGenerator( /*#__PURE__*/_regenerator2.default.mark(function _callee10(req, res) {
     var accessToken, userId, playlistId, playlistName, tracks, youtubePlaylistUrl;
-    return _regenerator2.default.wrap(function _callee11$(_context11) {
+    return _regenerator2.default.wrap(function _callee10$(_context10) {
       while (1) {
-        switch (_context11.prev = _context11.next) {
+        switch (_context10.prev = _context10.next) {
           case 0:
             accessToken = req.query.accessToken;
             userId = req.query.userId;
@@ -510,45 +499,45 @@ app.get('/compile-playlist', function () {
             playlistName = req.query.playlistName;
 
             if (!(!accessToken || !userId || !playlistId || !playlistName)) {
-              _context11.next = 6;
+              _context10.next = 6;
               break;
             }
 
-            return _context11.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'params_missing' })));
+            return _context10.abrupt('return', res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'params_missing' })));
 
           case 6:
-            _context11.prev = 6;
-            _context11.next = 9;
+            _context10.prev = 6;
+            _context10.next = 9;
             return getTracks(accessToken, userId, playlistId);
 
           case 9:
-            tracks = _context11.sent;
-            _context11.next = 12;
+            tracks = _context10.sent;
+            _context10.next = 12;
             return makeYoutubePlaylist(tracks, playlistName);
 
           case 12:
-            youtubePlaylistUrl = _context11.sent;
+            youtubePlaylistUrl = _context10.sent;
 
             res.json(youtubePlaylistUrl);
-            _context11.next = 19;
+            _context10.next = 19;
             break;
 
           case 16:
-            _context11.prev = 16;
-            _context11.t0 = _context11['catch'](6);
+            _context10.prev = 16;
+            _context10.t0 = _context10['catch'](6);
 
-            res.redirect(_config.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: _context11.t0 }));
+            res.json({ error: _context10.t0 });
 
           case 19:
           case 'end':
-            return _context11.stop();
+            return _context10.stop();
         }
       }
-    }, _callee11, undefined, [[6, 16]]);
+    }, _callee10, undefined, [[6, 16]]);
   }));
 
-  return function (_x17, _x18) {
-    return _ref13.apply(this, arguments);
+  return function (_x16, _x17) {
+    return _ref12.apply(this, arguments);
   };
 }());
 
