@@ -12,7 +12,7 @@ var getTracks = function () {
         switch (_context.prev = _context.next) {
           case 0:
             requestData = {
-              url: 'https://api.spotify.com/v1/users/' + userId + '/playlists/' + playlistId + '/tracks',
+              url: 'https://api.spotify.com/v1/users/' + userId + '/playlists/' + playlistId + '/tracks?fields=total,limit,items.track(name,artists(name))',
               method: 'GET',
               headers: {
                 'Authorization': 'Bearer ' + accessToken.toString('base64')
@@ -25,7 +25,8 @@ var getTracks = function () {
           case 3:
             requestResponse = _context.sent;
             return _context.abrupt('return', requestResponse.items.map(function (track) {
-              return { name: track.track.name };
+              console.log(_util2.default.inspect({ trackName: track.track.name, artistName: track.track.artists[0].name }));
+              return { trackName: track.track.name, artistName: track.track.artists[0].name };
             }));
 
           case 5:
@@ -51,7 +52,7 @@ var searchYoutube = function () {
             _context2.next = 2;
             return youtube.search.list({
               part: 'id,snippet',
-              q: track.name,
+              q: track.trackName + ' ' + track.artistName + ' music video',
               maxResults: 3,
               type: 'video'
             });
@@ -547,5 +548,5 @@ app.listen(5000, function () {
 
 // dont request all parts of tracks for playlist
 // get artist names to send to youtube
-// promises instead of chained callbacks
-// catch expired token
+// catch expired token, other error handling
+// good spinner that shoes each video being added

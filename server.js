@@ -100,7 +100,7 @@ function getPlaylists(accessToken, offset) {
 
 async function getTracks(accessToken, userId, playlistId) {
   const requestData = {
-    url: `https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks`,
+    url: `https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks?fields=total,limit,items.track(name,artists(name))`,
     method: 'GET',
     headers: {
       'Authorization': 'Bearer ' + (accessToken.toString('base64'))
@@ -110,14 +110,17 @@ async function getTracks(accessToken, userId, playlistId) {
 
   const requestResponse = await makeRequest(requestData);
   return requestResponse.items.map((track) => {
-    return {name: track.track.name};
+    return {
+      trackName: track.track.name,
+      artistName: track.track.artists[0].name
+    };
   });
 }
 
 async function searchYoutube(track) {
   const res = await youtube.search.list({
     part: 'id,snippet',
-    q: track.name,
+    q: `${track.trackName} ${track.artistName} music video`,
     maxResults: 3,
     type: 'video',
   });
@@ -275,7 +278,8 @@ app.listen(5000, () => {
   console.log('spotify-music-videos server listening on port 5000');
 });
 
-// dont request all parts of tracks for playlist
+// dont request all parts of tracks artist for playlist
 // get artist names to send to youtube
 // catch expired token, other error handling
 // good spinner that shoes each video being added
+// detect non music videos
