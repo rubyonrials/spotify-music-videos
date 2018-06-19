@@ -18,30 +18,42 @@ class App extends Component {
       error,
     }
 
+    if(accessToken && userId) {
+      this.fetchPlaylists();
+    }
+  }
+
+  fetchPlaylists = () => {
+    const {accessToken, userId} = this.state;
+
     fetch((BASE_API_URL + '/playlists?accessToken=' + accessToken + '&userId=' + userId), {
       headers: {'content-type': 'application/json'},
     })
       .then(response => response.json())
       .then(response => {
+        if(response.error) {
+          throw new Error(response.error);
+        }
+
         const playlists = response.items.map((playlist) => {
           return {id: playlist.id, name: playlist.name};
         });
         this.setState({playlists});
       })
       .catch((error) => {
-        this.setState({error: error.message});
-        // this.setState({accessToken: null, userId: null}));
+        this.setState({accessToken: null, userId: null, error: error.message});
       });
   }
 
   compilePlaylist = (event) => {
     const playlistId = event.target.dataset.id;
-    console.log('target: ', event.target.dataset.id);
+    const playlistName = event.target.dataset.name;
 
     fetch((BASE_API_URL +
       '/compile-playlist?accessToken=' + this.state.accessToken +
       '&playlistId=' + playlistId +
-      '&userId=' + this.state.userId
+      '&userId=' + this.state.userId +
+      '&playlistName=' + playlistName
     ), {
       headers: {'content-type': 'application/json'},
     })
@@ -76,6 +88,7 @@ class App extends Component {
                   // href='#'
                   onClick={this.compilePlaylist}
                   data-id={playlist.id}
+                  data-name={playlist.name}
                   style={{display: 'block', margin: '10px'}}>
                   {playlist.name}
                 </a>;

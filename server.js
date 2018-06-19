@@ -7,35 +7,52 @@ import {BASE_UI_URL,
   SPOTIFY_CLIENT_SECRET,
   SPOTIFY_PERMISSIONS,
   SPOTIFY_REDIRECT_URL,
-  YOUTUBE_API_KEY} from './src/config';
+  YOUTUBE_API_KEY,
+  YOUTUBE_CLIENT_ID,
+  YOUTUBE_CLIENT_SECRET,
+  YOUTUBE_ACCESS_TOKEN,
+  YOUTUBE_REFRESH_TOKEN,
+  YOUTUBE_AUTHORIZATION_CODE,
+  YOUTUBE_DEFAULT_PLAYLIST_ID,
+} from './src/config';
+
+const youtubeAuth = new google.auth.OAuth2(
+  YOUTUBE_CLIENT_ID,
+  YOUTUBE_CLIENT_SECRET,
+  'http://localhost:3000/youtube-login-callback',
+);
+
+youtubeAuth.setCredentials({
+  access_token: YOUTUBE_ACCESS_TOKEN,
+  refresh_token: YOUTUBE_REFRESH_TOKEN,
+});
 
 const youtube = google.youtube({
   version: 'v3',
-  auth: YOUTUBE_API_KEY,
+  auth: youtubeAuth,
 });
-
-async function runSample() {
-  const res = await youtube.search.list({
-    part: 'id,snippet',
-    q: 'MotorSport Migos Music Video',
-    maxResults: 3,
-    type: 'video',
-  });
-  console.log(res.data.items[0].snippet.title);
-  console.log(`https://www.youtube.com/watch?v=${res.data.items[0].id.videoId}`);
-}
-
-runSample();
 
 function makeRequest(requestData) {
   return new Promise((resolve, reject) => {
     request(requestData, (error, response, body) => {
       if (!error && response.statusCode === 200) {
         resolve(body);
-      } else if(error) {
-        reject(error);
       } else {
-        reject(body.error_description);
+        console.log(`Error while making request: ${requestData.method} ${requestData.url}`);
+
+        if(error) {
+          console.log('E1: ', error);
+          reject(error);
+        } else if(body.error_description) {
+          console.log('E2: ', body.error_description);
+          reject(body.error_description);
+        } else if(body.error) {
+          console.log(`E3: ${body.error.status} ${body.error.message}`);
+          reject(body.error.message);
+        } else {
+          console.log('E4: ', body);
+          reject('unknown error');
+        }
       }
     });
   });
@@ -96,6 +113,67 @@ async function getTracks(accessToken, userId, playlistId) {
   });
 }
 
+async function searchYoutube(track) {
+  const res = await youtube.search.list({
+    part: 'id,snippet',
+    q: track.name,
+    maxResults: 3,
+    type: 'video',
+  });
+  return res.data.items[0].id.videoId;
+}
+
+async function getYoutubeVideoIds(tracks) {
+  return await Promise.all(
+    tracks.map(async (track) => await searchYoutube(track))
+  );
+}
+
+async function createYoutubePlaylist(playlistName) {
+  try {
+    const res = await youtube.playlists.insert({
+      part: 'snippet,status',
+      resource: {
+        snippet: {
+          title: playlistName,
+          description: 'A playlist created by spotify-music-videos',
+        },
+        status: {
+          privacyStatus: 'unlisted',
+        },
+      },
+    });
+
+    return res.data.id;
+  } catch(error) {
+    return YOUTUBE_DEFAULT_PLAYLIST_ID;
+  }
+}
+
+async function addToYoutubePlaylist(playlistId, videoId) {
+  const res = await youtube.playlistItems.insert({
+    part: 'id,snippet',
+      resource: {
+          snippet: {
+              playlistId,
+              resourceId:{
+                  videoId,
+                  kind:"youtube#video"
+              }
+          }
+      }
+  });
+}
+
+async function makeYoutubePlaylist(tracks, playlistName) {
+  const videoIds = await getYoutubeVideoIds(tracks);
+  const playlistId = await createYoutubePlaylist(playlistName);
+  await Promise.all(
+    videoIds.map(async (videoId) => await addToYoutubePlaylist(playlistId, videoId))
+  );
+  return `https://www.youtube.com/watch?list=${playlistId}&v=${videoIds[0]}`;
+}
+
 const app = express();
 
 app.use((req, res, next) => {
@@ -154,7 +232,7 @@ app.get('/playlists', async (req, res) => {
     const playlists = await getPlaylists(accessToken, offset);
     res.json(playlists);
   } catch(error) {
-    res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
+    res.json({error});
   }
 });
 
@@ -162,16 +240,18 @@ app.get('/compile-playlist', async (req, res) => {
   const accessToken = req.query.accessToken;
   const userId = req.query.userId;
   const playlistId = req.query.playlistId;
+  const playlistName = req.query.playlistName;
 
-  if(!accessToken || !userId || !playlistId) {
+  if(!accessToken || !userId || !playlistId || !playlistName) {
     return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'params_missing'}));
   }
 
   try {
     const tracks = await getTracks(accessToken, userId, playlistId);
-    res.json(tracks);
+    const youtubePlaylistUrl = await makeYoutubePlaylist(tracks, playlistName);
+    res.json(youtubePlaylistUrl);
   } catch(error) {
-    res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
+    res.json({error});
   }
 });
 
