@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {BASE_API_URL} from './config';
@@ -16,9 +16,9 @@ class App extends Component {
       accessToken,
       userId,
       error,
-    }
+    };
 
-    if(accessToken && userId) {
+    if (accessToken && userId) {
       this.fetchPlaylists();
     }
   }
@@ -26,18 +26,16 @@ class App extends Component {
   fetchPlaylists = () => {
     const {accessToken, userId} = this.state;
 
-    fetch((BASE_API_URL + '/playlists?accessToken=' + accessToken + '&userId=' + userId), {
+    fetch((`${BASE_API_URL}/playlists?accessToken=${accessToken}&userId=${userId}`), {
       headers: {'content-type': 'application/json'},
     })
       .then(response => response.json())
-      .then(response => {
-        if(response.error) {
+      .then((response) => {
+        if (response.error) {
           throw new Error(response.error);
         }
 
-        const playlists = response.items.map((playlist) => {
-          return {id: playlist.id, name: playlist.name};
-        });
+        const playlists = response.items.map(playlist => ({id: playlist.id, name: playlist.name}));
         this.setState({playlists});
       })
       .catch((error) => {
@@ -48,22 +46,25 @@ class App extends Component {
   compilePlaylist = (event) => {
     const playlistId = event.target.dataset.id;
     const playlistName = event.target.dataset.name;
+    const {userId, accessToken} = this.state;
 
-    fetch((BASE_API_URL +
-      '/compile-playlist?accessToken=' + this.state.accessToken +
-      '&playlistId=' + playlistId +
-      '&userId=' + this.state.userId +
-      '&playlistName=' + playlistName
+    fetch((`${BASE_API_URL}/compile-playlist?
+      accessToken=${accessToken}
+      &playlistId=${playlistId}
+      &userId=${userId}
+      &playlistName=${playlistName}`
     ), {
       headers: {'content-type': 'application/json'},
     })
       .then(response => response.json())
-      .then(response => {
+      .then((response) => {
         console.log('compile playlist response: ', response);
       });
   }
 
   render() {
+    const {userId, accessToken, playlists, error} = this.state;
+
     return (
       <div className="App">
         <header className="App-header">
@@ -71,28 +72,30 @@ class App extends Component {
           <h1 className="App-title">Welcome to spotify-music-videos</h1>
         </header>
         <div className="App-intro">
-          <div>
-            <p>First, log in to Spotify.</p>
-            <a href={BASE_API_URL + '/login'}>Log in</a>
-          </div>
-
-          {this.state.error &&
-            <p style={{color: 'red'}}>{this.state.error}</p>
+          {!(userId && accessToken) &&
+            <div>
+              <p>Step 1: Log in to Spotify</p>
+              <a href={`${BASE_API_URL}/login`}>Log in</a>
+            </div>
           }
 
-          {this.state.playlists &&
+          {error &&
+            <p style={{color: 'red'}}>{error}</p>
+          }
+
+          {playlists &&
             <div>
-              {this.state.playlists.map((playlist) => {
-                return <a
+              <p>Step 2: Select a playlist</p>
+              {playlists.map(playlist =>
+                <a
                   key={playlist.id}
-                  // href='#'
+                  href='#'
                   onClick={this.compilePlaylist}
                   data-id={playlist.id}
                   data-name={playlist.name}
                   style={{display: 'block', margin: '10px'}}>
                   {playlist.name}
-                </a>;
-              })}
+                </a>)}
             </div>
           }
         </div>

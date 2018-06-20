@@ -8,6 +8,9 @@
 
 # production
 /build
+build-server
+
+src/config.js
 
 # misc
 .DS_Store

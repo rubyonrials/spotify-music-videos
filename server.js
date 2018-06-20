@@ -139,7 +139,7 @@ async function createYoutubePlaylist(playlistName) {
       part: 'snippet,status',
       resource: {
         snippet: {
-          title: playlistName,
+          title: `Music videos: ${playlistName}`,
           description: 'A playlist created by spotify-music-videos',
         },
         status: {
