@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {BASE_API_URL} from './config';
+import PlaylistLineItem from './components/PlaylistLineItem';
 
 class App extends Component {
   constructor(props) {
@@ -35,30 +36,13 @@ class App extends Component {
           throw new Error(response.error);
         }
 
-        const playlists = response.items.map(playlist => ({id: playlist.id, name: playlist.name}));
+        const playlists = response.items.map(playlist => (
+          {id: playlist.id, name: playlist.name}
+        ));
         this.setState({playlists});
       })
       .catch((error) => {
         this.setState({accessToken: null, userId: null, error: error.message});
-      });
-  }
-
-  compilePlaylist = (event) => {
-    const playlistId = event.target.dataset.id;
-    const playlistName = event.target.dataset.name;
-    const {userId, accessToken} = this.state;
-
-    fetch((`${BASE_API_URL}/compile-playlist?
-      accessToken=${accessToken}
-      &playlistId=${playlistId}
-      &userId=${userId}
-      &playlistName=${playlistName}`
-    ), {
-      headers: {'content-type': 'application/json'},
-    })
-      .then(response => response.json())
-      .then((response) => {
-        console.log('compile playlist response: ', response);
       });
   }
 
@@ -87,15 +71,12 @@ class App extends Component {
             <div>
               <p>Step 2: Select a playlist</p>
               {playlists.map(playlist =>
-                <a
+                <PlaylistLineItem
                   key={playlist.id}
-                  href='#'
-                  onClick={this.compilePlaylist}
-                  data-id={playlist.id}
-                  data-name={playlist.name}
-                  style={{display: 'block', margin: '10px'}}>
-                  {playlist.name}
-                </a>)}
+                  playlist={playlist}
+                  accessToken={accessToken}
+                  userId={userId}
+                />)}
             </div>
           }
         </div>

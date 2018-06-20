@@ -169,8 +169,11 @@ function addToYoutubePlaylist(playlistId, videoId) {
   });
 }
 
+// TODO: speed this up. dont wait 600, wait until previous execution finishes
 async function insertVideosIntoPlaylist(playlistId, videoIds) {
   let index = 0;
+
+  // use for, await before incrementing
 
   return new Promise((resolve, reject) => {
     const interval = setInterval(() => {
@@ -181,7 +184,7 @@ async function insertVideosIntoPlaylist(playlistId, videoIds) {
         addToYoutubePlaylist(playlistId, videoIds[index]);
         index += 1;
       }
-    }, 1000);
+    }, 600);
   });
 }
 
@@ -262,7 +265,7 @@ app.get('/compile-playlist', async (req, res) => {
   const playlistName = req.query.playlistName;
 
   if(!accessToken || !userId || !playlistId || !playlistName) {
-    return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'params_missing'}));
+    return res.json({error: 'params_missing'});
   }
 
   try {
@@ -283,3 +286,4 @@ app.listen(5000, () => {
 // catch expired token, other error handling
 // good spinner that shoes each video being added
 // detect non music videos
+// save accesstoken, userid in local storage
