@@ -1,0 +1,59 @@
+{
+  "parser": "babel-eslint",
+  "plugins": [
+    "react",
+  ],
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true
+    }
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "extends" : [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "airbnb-base"
+  ],
+  "globals": {
+    "alert": false
+  },
+  "rules" : {
+    "arrow-body-style": "error",
+    "function-paren-newline": ["error", "consistent"],
+    "import/first": "error",
+    "indent": ["error", 2],
+    "global-require": "off",
+    "max-len": ["error", 110, {"ignoreRegExpLiterals": true}],
+    "no-alert": "warn",
+    "no-console": "warn",
+    "no-mixed-operators": "off",
+    "no-multiple-empty-lines": ["error", {"max": 1}],
+    "no-prototype-builtins": "off",
+    "no-use-before-define": "error",
+    "object-curly-newline": ["error", { "consistent": true }],
+    "object-curly-spacing": ["error", "never"],
+    "prefer-destructuring": "off",
+    "prefer-template": "off",
+    "require-await": "error",
+
+    "react/jsx-indent": ["error", 2],
+    "react/jsx-indent-props": ["error", 2],
+    "react/jsx-closing-bracket-location": [
+      "error",
+      {"selfClosing": "tag-aligned", "nonEmpty": "after-props"}
+    ],
+    "react/sort-comp": ["error", {
+      "order": [
+        "type-annotations",
+        "static-methods",
+        "lifecycle",
+        "everything-else",
+        "render"
+      ]
+    }]
+  }
+}

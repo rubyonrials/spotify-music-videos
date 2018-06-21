@@ -15,7 +15,7 @@ import {BASE_UI_URL,
   YOUTUBE_REFRESH_TOKEN,
   YOUTUBE_AUTHORIZATION_CODE,
   YOUTUBE_DEFAULT_PLAYLIST_ID,
-} from './src/config';
+} from './config';
 
 const youtubeAuth = new google.auth.OAuth2(
   YOUTUBE_CLIENT_ID,

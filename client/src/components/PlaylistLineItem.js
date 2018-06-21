@@ -1,6 +1,6 @@
 import React, {Component, Props} from 'react';
 import '../App.css';
-import {BASE_API_URL} from '../config';
+import {BASE_API_URL} from '../../../config';
 
 class PlaylistLineItem extends Component<Props> {
   constructor(props) {

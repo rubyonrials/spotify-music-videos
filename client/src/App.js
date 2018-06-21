@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import logo from './logo.svg';
 import './App.css';
-import {BASE_API_URL} from './config';
+import {BASE_API_URL} from '../../config';
 import PlaylistLineItem from './components/PlaylistLineItem';
 
 class App extends Component {
