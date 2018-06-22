@@ -3,6 +3,7 @@ import querystring from 'querystring';
 import request from 'request';
 import {google} from 'googleapis';
 import util from 'util';
+import path from 'path';
 import {BASE_UI_URL,
   SPOTIFY_CLIENT_ID,
   SPOTIFY_CLIENT_SECRET,
@@ -198,6 +199,8 @@ async function makeYoutubePlaylist(tracks, playlistName) {
 
 const app = express();
 
+app.use(express.static(path.join(__dirname, '..', 'client/build')));
+
 app.use((req, res, next) => {
   // Website you wish to allow to connect
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -277,12 +280,15 @@ app.get('/compile-playlist', async (req, res) => {
   }
 });
 
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', '/client/build/index.html'));
+});
+
 app.listen(5000, () => {
   console.log('spotify-music-videos server listening on port 5000');
 });
 
 // dont request all parts of tracks artist for playlist
-// get artist names to send to youtube
 // catch expired token, other error handling
 // good spinner that shoes each video being added
 // detect non music videos

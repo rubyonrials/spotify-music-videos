@@ -13,6 +13,6 @@
     "start": "node build/index.js",
     "heroku-postbuild": "cd client && yarn && yarn run build",
     "build": "NODE_ENV=development babel index.js config.js -d build --presets es2015",
-    "server": "yarn start && yarn build"
+    "server": "yarn build && yarn start"
   }
 }
