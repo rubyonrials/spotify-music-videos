@@ -4,29 +4,22 @@ import request from 'request';
 import {google} from 'googleapis';
 import util from 'util';
 import path from 'path';
-import {BASE_UI_URL,
-  SPOTIFY_CLIENT_ID,
-  SPOTIFY_CLIENT_SECRET,
-  SPOTIFY_PERMISSIONS,
-  SPOTIFY_REDIRECT_URL,
-  YOUTUBE_API_KEY,
-  YOUTUBE_CLIENT_ID,
-  YOUTUBE_CLIENT_SECRET,
-  YOUTUBE_ACCESS_TOKEN,
-  YOUTUBE_REFRESH_TOKEN,
-  YOUTUBE_AUTHORIZATION_CODE,
-  YOUTUBE_DEFAULT_PLAYLIST_ID,
-} from './config';
+
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').load();
+}
+
+const SPOTIFY_PERMISSIONS = ['user-library-read', 'playlist-read-collaborative', 'playlist-read-private'];
 
 const youtubeAuth = new google.auth.OAuth2(
-  YOUTUBE_CLIENT_ID,
-  YOUTUBE_CLIENT_SECRET,
+  process.env.YOUTUBE_CLIENT_ID,
+  process.env.YOUTUBE_CLIENT_SECRET,
   'http://localhost:3000/youtube-login-callback',
 );
 
 youtubeAuth.setCredentials({
-  access_token: YOUTUBE_ACCESS_TOKEN,
-  refresh_token: YOUTUBE_REFRESH_TOKEN,
+  access_token: process.env.YOUTUBE_ACCESS_TOKEN,
+  refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
 });
 
 const youtube = google.youtube({
@@ -66,11 +59,11 @@ function getAuthTokens(code) {
     method: 'POST',
     form: {
       code: code,
-      redirect_uri: SPOTIFY_REDIRECT_URL,
+      redirect_uri: process.env.SPOTIFY_REDIRECT_URL,
       grant_type: 'authorization_code'
     },
     headers: {
-      'Authorization': 'Basic ' + (new Buffer(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET).toString('base64'))
+      'Authorization': 'Basic ' + (new Buffer(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET).toString('base64'))
     },
     json: true
   };
@@ -151,7 +144,7 @@ async function createYoutubePlaylist(playlistName) {
 
     return res.data.id;
   } catch(error) {
-    return YOUTUBE_DEFAULT_PLAYLIST_ID;
+    return process.env.YOUTUBE_DEFAULT_PLAYLIST_ID;
   }
 }
 
@@ -219,30 +212,30 @@ app.get('/login', (req, res) => {
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
-      client_id: SPOTIFY_CLIENT_ID,
+      client_id: process.env.SPOTIFY_CLIENT_ID,
       scope: SPOTIFY_PERMISSIONS,
-      redirect_uri: SPOTIFY_REDIRECT_URL,
+      redirect_uri: process.env.SPOTIFY_REDIRECT_URL,
     }));
 });
 
 app.get('/login-callback', async (req, res) => {
   const code = req.query.code;
   if(!code) {
-    return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'code_missing'}));
+    return res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error: 'code_missing'}));
   }
 
   try {
     const {access_token: accessToken, refresh_token: refreshToken} = await getAuthTokens(code);
     const {id: userId} = await getUserId(accessToken);
 
-    res.redirect(BASE_UI_URL + '?' +
+    res.redirect(process.env.BASE_UI_URL + '?' +
       querystring.stringify({
         accessToken,
         refreshToken,
         userId,
       }));
   } catch(error) {
-    res.redirect(BASE_UI_URL + '?' + querystring.stringify({error}));
+    res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error}));
   }
 });
 
@@ -250,7 +243,7 @@ app.get('/playlists', async (req, res) => {
   const accessToken = req.query.accessToken;
   const offset = req.query.offset || 0;
   if(!accessToken || accessToken === '') {
-    return res.redirect(BASE_UI_URL + '?' + querystring.stringify({error: 'access_token_missing'}));
+    return res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error: 'access_token_missing'}));
   }
 
   try {

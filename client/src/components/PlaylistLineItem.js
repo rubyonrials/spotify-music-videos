@@ -1,6 +1,5 @@
 import React, {Component, Props} from 'react';
 import '../App.css';
-import {BASE_API_URL} from '../../../config';
 
 class PlaylistLineItem extends Component<Props> {
   constructor(props) {
@@ -24,7 +23,7 @@ class PlaylistLineItem extends Component<Props> {
       },
     });
 
-    fetch((BASE_API_URL + '/compile-playlist?' +
+    fetch((process.env.REACT_APP_BASE_API_URL + '/compile-playlist?' +
       'accessToken=' + accessToken +
       '&playlistId=' + playlistId +
       '&userId=' + userId +

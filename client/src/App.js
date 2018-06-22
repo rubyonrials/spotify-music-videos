@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import logo from './logo.svg';
 import './App.css';
-import {BASE_API_URL} from '../../config';
 import PlaylistLineItem from './components/PlaylistLineItem';
 
 class App extends Component {
@@ -27,7 +26,7 @@ class App extends Component {
   fetchPlaylists = () => {
     const {accessToken, userId} = this.state;
 
-    fetch((`${BASE_API_URL}/playlists?accessToken=${accessToken}&userId=${userId}`), {
+    fetch((`${process.env.REACT_APP_BASE_API_URL}/playlists?accessToken=${accessToken}&userId=${userId}`), {
       headers: {'content-type': 'application/json'},
     })
       .then(response => response.json())
@@ -59,7 +58,7 @@ class App extends Component {
           {!(userId && accessToken) &&
             <div>
               <p>Step 1: Log in to Spotify</p>
-              <a href={`${BASE_API_URL}/login`}>Log in</a>
+              <a href={`${process.env.REACT_APP_BASE_API_URL}/login`}>Log in</a>
             </div>
           }
 

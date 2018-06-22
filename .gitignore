@@ -8,9 +8,8 @@
 /coverage
 
 # production
-/build
-/build-server
 /client/build
+/build
 
 config.js
 
@@ -20,6 +19,7 @@ config.js
 .env.development.local
 .env.test.local
 .env.production.local
+*.env*
 .ignore
 
 npm-debug.log*
