@@ -23,7 +23,7 @@ class PlaylistLineItem extends Component<Props> {
       },
     });
 
-    fetch((process.env.REACT_APP_BASE_API_URL + '/compile-playlist?' +
+    fetch(('/compile-playlist?' +
       'accessToken=' + accessToken +
       '&playlistId=' + playlistId +
       '&userId=' + userId +

@@ -26,7 +26,7 @@ class App extends Component {
   fetchPlaylists = () => {
     const {accessToken, userId} = this.state;
 
-    fetch((`${process.env.REACT_APP_BASE_API_URL}/playlists?accessToken=${accessToken}&userId=${userId}`), {
+    fetch((`/playlists?accessToken=${accessToken}&userId=${userId}`), {
       headers: {'content-type': 'application/json'},
     })
       .then(response => response.json())
@@ -58,7 +58,7 @@ class App extends Component {
           {!(userId && accessToken) &&
             <div>
               <p>Step 1: Log in to Spotify</p>
-              <a href={`${process.env.REACT_APP_BASE_API_URL}/login`}>Log in</a>
+              <a href={'/login'}>Log in</a>
             </div>
           }
 

@@ -294,8 +294,9 @@ app.get('*', function (req, res) {
   res.sendFile(_path2.default.join(__dirname, '..', '/client/build/index.html'));
 });
 
-app.listen(5000, function () {
-  console.log('spotify-music-videos server listening on port 5000');
+var port = process.env.PORT || 5000;
+app.listen(port, function () {
+  console.log('spotify-music-videos server listening on port ', port);
 });
 
 // dont request all parts of tracks artist for playlist
