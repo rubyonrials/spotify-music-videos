@@ -29,8 +29,9 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 var SPOTIFY_PERMISSIONS = ['user-library-read', 'playlist-read-collaborative', 'playlist-read-private'];
+var YOUTUBE_PERMISSIONS = ['https://www.googleapis.com/auth/youtube'];
 
-var youtubeAuth = new _googleapis.google.auth.OAuth2(process.env.YOUTUBE_CLIENT_ID, process.env.YOUTUBE_CLIENT_SECRET, 'http://localhost:3000/youtube-login-callback');
+var youtubeAuth = new _googleapis.google.auth.OAuth2(process.env.YOUTUBE_CLIENT_ID, process.env.YOUTUBE_CLIENT_SECRET, process.env.YOUTUBE_REDIRECT_URL);
 
 youtubeAuth.setCredentials({
   access_token: process.env.YOUTUBE_ACCESS_TOKEN,
@@ -95,7 +96,7 @@ function getUserId(accessToken) {
   return makeRequest(requestData);
 }
 
-function getPlaylists(accessToken, offset) {
+function getSpotifyPlaylists(accessToken, offset) {
   var requestData = {
     url: 'https://api.spotify.com/v1/me/playlists?limit=50&offset=' + offset,
     method: 'GET',
@@ -223,7 +224,7 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.get('/login', function (req, res) {
+app.get('/spotify-login', function (req, res) {
   res.redirect('https://accounts.spotify.com/authorize?' + _querystring2.default.stringify({
     response_type: 'code',
     client_id: process.env.SPOTIFY_CLIENT_ID,
@@ -232,7 +233,7 @@ app.get('/login', function (req, res) {
   }));
 });
 
-app.get('/login-callback', async function (req, res) {
+app.get('/spotify-login-callback', async function (req, res) {
   var code = req.query.code;
   if (!code) {
     return res.redirect(process.env.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'code_missing' }));
@@ -240,32 +241,32 @@ app.get('/login-callback', async function (req, res) {
 
   try {
     var _ref = await getAuthTokens(code),
-        accessToken = _ref.access_token,
-        refreshToken = _ref.refresh_token;
+        spotifyAccessToken = _ref.access_token,
+        spotifyRefreshToken = _ref.refresh_token;
 
-    var _ref2 = await getUserId(accessToken),
-        userId = _ref2.id;
+    var _ref2 = await getUserId(spotifyAccessToken),
+        spotifyUserId = _ref2.id;
 
     res.redirect(process.env.BASE_UI_URL + '?' + _querystring2.default.stringify({
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      userId: userId
+      spotifyAccessToken: spotifyAccessToken,
+      spotifyRefreshToken: spotifyRefreshToken,
+      spotifyUserId: spotifyUserId
     }));
   } catch (error) {
+    console.log('error 1: ', error);
     res.redirect(process.env.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: error }));
   }
 });
 
-app.get('/playlists', async function (req, res) {
+app.get('/spotify-playlists', async function (req, res) {
   var accessToken = req.query.accessToken;
   var offset = req.query.offset || 0;
   if (!accessToken || accessToken === '') {
-    return res.redirect(process.env.BASE_UI_URL + '?' + _querystring2.default.stringify({ error: 'access_token_missing' }));
+    return res.json({ error: 'access_token_missing' });
   }
 
   try {
-    var playlists = await getPlaylists(accessToken, offset);
-    res.json(playlists);
+    res.json((await getSpotifyPlaylists(accessToken, offset)));
   } catch (error) {
     res.json({ error: error });
   }

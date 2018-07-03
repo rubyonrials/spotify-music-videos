@@ -10,11 +10,12 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const SPOTIFY_PERMISSIONS = ['user-library-read', 'playlist-read-collaborative', 'playlist-read-private'];
+const YOUTUBE_PERMISSIONS = ['https://www.googleapis.com/auth/youtube'];
 
 const youtubeAuth = new google.auth.OAuth2(
   process.env.YOUTUBE_CLIENT_ID,
   process.env.YOUTUBE_CLIENT_SECRET,
-  'http://localhost:3000/youtube-login-callback',
+  process.env.YOUTUBE_REDIRECT_URL,
 );
 
 youtubeAuth.setCredentials({
@@ -80,7 +81,7 @@ function getUserId(accessToken) {
   return makeRequest(requestData);
 }
 
-function getPlaylists(accessToken, offset) {
+function getSpotifyPlaylists(accessToken, offset) {
   const requestData = {
     url: `https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`,
     method: 'GET',
@@ -208,7 +209,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/login', (req, res) => {
+app.get('/spotify-login', (req, res) => {
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -218,37 +219,39 @@ app.get('/login', (req, res) => {
     }));
 });
 
-app.get('/login-callback', async (req, res) => {
+app.get('/spotify-login-callback', async (req, res) => {
   const code = req.query.code;
   if(!code) {
     return res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error: 'code_missing'}));
   }
 
   try {
-    const {access_token: accessToken, refresh_token: refreshToken} = await getAuthTokens(code);
-    const {id: userId} = await getUserId(accessToken);
+    const {
+      access_token: spotifyAccessToken,
+      refresh_token: spotifyRefreshToken,
+    } = await getAuthTokens(code);
+    const {id: spotifyUserId} = await getUserId(spotifyAccessToken);
 
     res.redirect(process.env.BASE_UI_URL + '?' +
       querystring.stringify({
-        accessToken,
-        refreshToken,
-        userId,
+        spotifyAccessToken,
+        spotifyRefreshToken,
+        spotifyUserId,
       }));
   } catch(error) {
     res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error}));
   }
 });
 
-app.get('/playlists', async (req, res) => {
+app.get('/spotify-playlists', async (req, res) => {
   const accessToken = req.query.accessToken;
   const offset = req.query.offset || 0;
   if(!accessToken || accessToken === '') {
-    return res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error: 'access_token_missing'}));
+    return res.json({error: 'access_token_missing'});
   }
 
   try {
-    const playlists = await getPlaylists(accessToken, offset);
-    res.json(playlists);
+    res.json(await getSpotifyPlaylists(accessToken, offset));
   } catch(error) {
     res.json({error});
   }
