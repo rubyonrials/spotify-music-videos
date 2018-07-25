@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import logo from './logo.svg';
 import './App.css';
 import PlaylistLineItem from './components/PlaylistLineItem';
 import {loadState, saveState} from './util';
@@ -55,8 +54,16 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to spotify-music-videos</h1>
+          <h1 className="App-title">
+            spotify music videos
+          </h1>
+          <p>
+            Developed by
+            <a href='https://github.com/rubyonrials'
+              target='_blank' rel='noopener noreferrer'>
+              &nbsp;matt
+            </a>
+          </p>
         </header>
         <div className="App-intro">
           {Object.keys(spotify).length === 0 &&
@@ -71,7 +78,7 @@ class App extends Component {
           }
 
           {playlists.length > 0 &&
-            <div>
+            <React.Fragment>
               <p>Step 2: Select a playlist</p>
               {playlists.map(playlist =>
                 <PlaylistLineItem
@@ -79,7 +86,7 @@ class App extends Component {
                   playlist={playlist}
                   compilePlaylist={this.compilePlaylist}
                 />)}
-            </div>
+            </React.Fragment>
           }
         </div>
       </div>
