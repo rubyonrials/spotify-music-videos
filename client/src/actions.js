@@ -71,10 +71,15 @@ export function fetchSpotifyPlaylists() {
       const playlists = response.items.map(playlist => (
         {id: playlist.id, name: playlist.name}
       ));
+
+      const dedupedPlaylists = playlists.filter(playlist => (
+        this.state.playlists.find(sp => sp.id === playlist.id) === undefined
+      ));
+
       this.setState({
         playlists: [
           ...this.state.playlists,
-          ...playlists,
+          ...dedupedPlaylists,
         ],
       });
     })

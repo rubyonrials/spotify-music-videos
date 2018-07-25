@@ -289,5 +289,5 @@ app.listen(port, () => {
 // good spinner that shows each video being added
 // detect non music videos
 // new design
-// get playlistitem working again
 // youtube oauth
+// timeouts for huge playlists

@@ -36,7 +36,16 @@ class App extends Component {
 
   componentDidUpdate() {
     const backupState = Object.assign({}, this.state);
+
     delete (backupState.error);
+
+    // don't save youtube loading state
+    backupState.playlists.forEach((playlist) => {
+      if (playlist.youtube) {
+        delete (playlist.youtube.loading);
+      }
+    });
+
     saveState(backupState);
   }
 
