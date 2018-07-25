@@ -2,7 +2,6 @@ import express from 'express';
 import querystring from 'querystring';
 import request from 'request';
 import {google} from 'googleapis';
-import util from 'util';
 import path from 'path';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -36,18 +35,18 @@ function makeRequest(requestData) {
       } else {
         console.log(`Error while making request: ${requestData.method} ${requestData.url}`);
 
-        if(error) {
+        if (error) {
           console.log('E1: ', error);
           reject(error);
-        } else if(body.error_description) {
+        } else if (body.error_description) {
           console.log('E2: ', body.error_description);
           reject(body.error_description);
-        } else if(body.error) {
+        } else if (body.error) {
           console.log(`E3: ${body.error.status} ${body.error.message}`);
           reject(body.error.message);
         } else {
           console.log('E4: ', body);
-          reject('unknown error');
+          reject(new Error('unknown error'));
         }
       }
     });
@@ -59,14 +58,16 @@ function getAuthTokens(code) {
     url: 'https://accounts.spotify.com/api/token',
     method: 'POST',
     form: {
-      code: code,
+      code,
       redirect_uri: process.env.SPOTIFY_REDIRECT_URL,
-      grant_type: 'authorization_code'
+      grant_type: 'authorization_code',
     },
     headers: {
-      'Authorization': 'Basic ' + (new Buffer(process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET).toString('base64'))
+      Authorization: 'Basic ' + (Buffer.from(
+        process.env.SPOTIFY_CLIENT_ID + ':' + process.env.SPOTIFY_CLIENT_SECRET,
+      ).toString('base64')),
     },
-    json: true
+    json: true,
   };
   return makeRequest(requestData);
 }
@@ -75,8 +76,8 @@ function getUserId(accessToken) {
   const requestData = {
     url: 'https://api.spotify.com/v1/me',
     method: 'GET',
-    headers: { 'Authorization': 'Bearer ' + accessToken },
-    json: true
+    headers: {Authorization: 'Bearer ' + accessToken},
+    json: true,
   };
   return makeRequest(requestData);
 }
@@ -86,9 +87,9 @@ function getSpotifyPlaylists(accessToken, offset) {
     url: `https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`,
     method: 'GET',
     headers: {
-      'Authorization': 'Bearer ' + (accessToken.toString('base64'))
+      Authorization: 'Bearer ' + (accessToken.toString('base64')),
     },
-    json: true
+    json: true,
   };
   return makeRequest(requestData);
 }
@@ -98,18 +99,16 @@ async function getTracks(accessToken, userId, playlistId) {
     url: `https://api.spotify.com/v1/users/${userId}/playlists/${playlistId}/tracks?fields=total,limit,items.track(name,artists(name))`,
     method: 'GET',
     headers: {
-      'Authorization': 'Bearer ' + (accessToken.toString('base64'))
+      Authorization: 'Bearer ' + (accessToken.toString('base64')),
     },
-    json: true
+    json: true,
   };
 
   const requestResponse = await makeRequest(requestData);
-  return requestResponse.items.map((track) => {
-    return {
-      trackName: track.track.name,
-      artistName: track.track.artists[0].name
-    };
-  });
+  return requestResponse.items.map(track => ({
+    trackName: track.track.name,
+    artistName: track.track.artists[0].name,
+  }));
 }
 
 async function searchYoutube(track) {
@@ -122,9 +121,9 @@ async function searchYoutube(track) {
   return res.data.items[0].id.videoId;
 }
 
-async function getYoutubeVideoIds(tracks) {
-  return await Promise.all(
-    tracks.map(async (track) => await searchYoutube(track))
+function getYoutubeVideoIds(tracks) {
+  return Promise.all(
+    tracks.map(track => searchYoutube(track)),
   );
 }
 
@@ -144,7 +143,7 @@ async function createYoutubePlaylist(playlistName) {
     });
 
     return res.data.id;
-  } catch(error) {
+  } catch (error) {
     return process.env.YOUTUBE_DEFAULT_PLAYLIST_ID;
   }
 }
@@ -157,10 +156,10 @@ function addToYoutubePlaylist(playlistId, videoId) {
         playlistId,
         resourceId: {
           videoId,
-          kind: 'youtube#video'
-        }
-      }
-    }
+          kind: 'youtube#video',
+        },
+      },
+    },
   });
 }
 
@@ -172,7 +171,7 @@ async function insertVideosIntoPlaylist(playlistId, videoIds) {
 
   return new Promise((resolve, reject) => {
     const interval = setInterval(() => {
-      if(index == videoIds.length) {
+      if (index === videoIds.length) {
         clearInterval(interval);
         resolve();
       } else {
@@ -203,7 +202,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
 
   // Request headers you wish to allow
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 
   // Pass to next layer of middleware
   next();
@@ -221,7 +220,7 @@ app.get('/spotify-login', (req, res) => {
 
 app.get('/spotify-login-callback', async (req, res) => {
   const code = req.query.code;
-  if(!code) {
+  if (!code) {
     return res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error: 'code_missing'}));
   }
 
@@ -232,28 +231,28 @@ app.get('/spotify-login-callback', async (req, res) => {
     } = await getAuthTokens(code);
     const {id: spotifyUserId} = await getUserId(spotifyAccessToken);
 
-    res.redirect(process.env.BASE_UI_URL + '?' +
+    return res.redirect(process.env.BASE_UI_URL + '?' +
       querystring.stringify({
         spotifyAccessToken,
         spotifyRefreshToken,
         spotifyUserId,
       }));
-  } catch(error) {
-    res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error}));
+  } catch (error) {
+    return res.redirect(process.env.BASE_UI_URL + '?' + querystring.stringify({error}));
   }
 });
 
 app.get('/spotify-playlists', async (req, res) => {
   const accessToken = req.query.accessToken;
   const offset = req.query.offset || 0;
-  if(!accessToken || accessToken === '') {
+  if (!accessToken || accessToken === '') {
     return res.json({error: 'access_token_missing'});
   }
 
   try {
-    res.json(await getSpotifyPlaylists(accessToken, offset));
-  } catch(error) {
-    res.json({error});
+    return res.json(await getSpotifyPlaylists(accessToken, offset));
+  } catch (error) {
+    return res.json({error});
   }
 });
 
@@ -263,16 +262,16 @@ app.get('/compile-playlist', async (req, res) => {
   const playlistId = req.query.playlistId;
   const playlistName = req.query.playlistName;
 
-  if(!accessToken || !userId || !playlistId || !playlistName) {
+  if (!accessToken || !userId || !playlistId || !playlistName) {
     return res.json({error: 'params_missing'});
   }
 
   try {
     const tracks = await getTracks(accessToken, userId, playlistId);
     const youtubePlaylistUrl = await makeYoutubePlaylist(tracks, playlistName);
-    res.json(youtubePlaylistUrl);
-  } catch(error) {
-    res.json({error});
+    return res.json(youtubePlaylistUrl);
+  } catch (error) {
+    return res.json({error});
   }
 });
 
@@ -287,6 +286,8 @@ app.listen(port, () => {
 
 // dont request all parts of tracks artist for playlist
 // catch expired token, other error handling
-// good spinner that shoes each video being added
+// good spinner that shows each video being added
 // detect non music videos
-// save accesstoken, userid in local storage
+// new design
+// get playlistitem working again
+// youtube oauth

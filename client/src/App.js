@@ -2,69 +2,46 @@ import React, {Component} from 'react';
 import logo from './logo.svg';
 import './App.css';
 import PlaylistLineItem from './components/PlaylistLineItem';
+import {loadState, saveState} from './util';
+import {
+  BASE_API_URL,
+  emptyState,
+  compilePlaylist,
+  fetchSpotifyPlaylists,
+} from './actions';
 
-const BASE_API_URL = 'http://localhost:5000';
 const params = new URL(window.location.href).searchParams;
 
 class App extends Component {
   constructor(props) {
     super(props);
+    this.fetchSpotifyPlaylists = fetchSpotifyPlaylists.bind(this);
+    this.compilePlaylist = compilePlaylist.bind(this);
 
-    const spotifyAccessToken = this.getParam('spotifyAccessToken');
-    const spotifyUserId = this.getParam('spotifyUserId');
-    const youtubeAccessToken = this.getParam('youtubeAccessToken');
+    // First try to load state from localStorage, and overwrite with param values, if they exist
+    this.state = loadState() || emptyState;
+
+    const spotifyAccessToken = params.get('spotifyAccessToken');
+    const spotifyUserId = params.get('spotifyUserId');
+    const youtubeAccessToken = params.get('youtubeAccessToken');
     const error = params.get('error');
 
-    this.state = {
-      spotify: {
-        accessToken: spotifyAccessToken,
-        userId: spotifyUserId,
-      },
-      youtube: {
-        accessToken: youtubeAccessToken,
-      },
-      error,
-    };
+    if (spotifyAccessToken) { this.state.spotify.accessToken = spotifyAccessToken; }
+    if (spotifyUserId) { this.state.spotify.userId = spotifyUserId; }
+    if (youtubeAccessToken) { this.state.youtube.accessToken = youtubeAccessToken; }
+    if (error) { this.state.error = error; }
 
-    if (spotifyAccessToken && spotifyUserId) {
-      this.fetchSpotifyPlaylists();
-    }
+    this.fetchSpotifyPlaylists();
   }
 
-  getParam = (key) => {
-    const urlParam = params.get(key);
-    if (urlParam) {
-      sessionStorage.setItem(key, urlParam);
-      return urlParam;
-    }
-
-    return sessionStorage.getItem(key);
-  }
-
-  fetchSpotifyPlaylists = () => {
-    const {accessToken, userId} = this.state.spotify;
-
-    fetch((`${BASE_API_URL}/spotify-playlists?accessToken=${accessToken}&userId=${userId}`), {
-      headers: {'content-type': 'application/json'},
-    })
-      .then(response => response.json())
-      .then((response) => {
-        if (response.error) {
-          throw new Error(response.error);
-        }
-
-        const playlists = response.items.map(playlist => (
-          {id: playlist.id, name: playlist.name}
-        ));
-        this.setState({playlists});
-      })
-      .catch((error) => {
-        this.setState({accessToken: null, userId: null, error: error.message});
-      });
+  componentDidUpdate() {
+    const backupState = Object.assign({}, this.state);
+    delete (backupState.error);
+    saveState(backupState);
   }
 
   render() {
-    const {userId, accessToken, playlists, error} = this.state;
+    const {spotify, playlists, error} = this.state;
 
     return (
       <div className="App">
@@ -73,7 +50,7 @@ class App extends Component {
           <h1 className="App-title">Welcome to spotify-music-videos</h1>
         </header>
         <div className="App-intro">
-          {!(userId && accessToken) &&
+          {Object.keys(spotify).length === 0 &&
             <div>
               <p>Step 1: Log in to Spotify</p>
               <a href={`${BASE_API_URL}/spotify-login`}>Log in</a>
@@ -84,15 +61,14 @@ class App extends Component {
             <p style={{color: 'red'}}>{error}</p>
           }
 
-          {playlists &&
+          {playlists.length > 0 &&
             <div>
               <p>Step 2: Select a playlist</p>
               {playlists.map(playlist =>
                 <PlaylistLineItem
                   key={playlist.id}
                   playlist={playlist}
-                  accessToken={accessToken}
-                  userId={userId}
+                  compilePlaylist={this.compilePlaylist}
                 />)}
             </div>
           }

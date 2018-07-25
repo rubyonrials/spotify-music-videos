@@ -30,6 +30,7 @@
     "max-len": ["error", 110, {"ignoreRegExpLiterals": true}],
     "no-alert": "warn",
     "no-console": "warn",
+    "no-debugger": "warn",
     "no-mixed-operators": "off",
     "no-multiple-empty-lines": ["error", {"max": 1}],
     "no-prototype-builtins": "off",

@@ -2,59 +2,13 @@ import React, {Component, Props} from 'react';
 import '../App.css';
 
 class PlaylistLineItem extends Component<Props> {
-  constructor(props) {
-    super(props);
-    this.state = {
-      playlist: props.playlist,
-    };
-  }
-
-  compilePlaylist = (event) => {
-    const playlistId = event.target.dataset.id;
-    const playlistName = event.target.dataset.name;
-    const {userId, accessToken} = this.props;
-
-    this.setState({
-      playlist: {
-        ...this.state.playlist,
-        youtube: {
-          loading: true,
-        },
-      },
-    });
-
-    fetch(('/compile-playlist?' +
-      'accessToken=' + accessToken +
-      '&playlistId=' + playlistId +
-      '&userId=' + userId +
-      '&playlistName=' + playlistName
-    ), {
-      headers: {'content-type': 'application/json'},
-    })
-      .then(response => response.json())
-      .then((response) => {
-        this.setState({
-          playlist: {
-            ...this.state.playlist,
-            youtube: {
-              loading: false,
-              url: response,
-            },
-          },
-        });
-      })
-      .catch((error) => {
-        this.setState({error: error.message});
-      });
-  }
-
   renderDefault() {
-    const {playlist} = this.state;
+    const {playlist} = this.props;
 
     return (
       <a
         href='#'
-        onClick={this.compilePlaylist}
+        onClick={this.props.compilePlaylist}
         data-id={playlist.id}
         data-name={playlist.name}
         style={{display: 'block', margin: '10px'}}>
@@ -64,7 +18,7 @@ class PlaylistLineItem extends Component<Props> {
   }
 
   renderLoading() {
-    const {playlist} = this.state;
+    const {playlist} = this.props;
 
     return (
       <div>
@@ -75,7 +29,7 @@ class PlaylistLineItem extends Component<Props> {
   }
 
   renderComplete() {
-    const {playlist} = this.state;
+    const {playlist} = this.props;
 
     return (
       <div>
@@ -88,7 +42,7 @@ class PlaylistLineItem extends Component<Props> {
   }
 
   render() {
-    const youtube = this.state.playlist.youtube;
+    const youtube = this.props.playlist.youtube;
 
     if (youtube) {
       if (youtube.loading) {
