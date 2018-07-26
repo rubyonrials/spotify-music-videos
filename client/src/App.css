@@ -1,9 +1,9 @@
 .App {
   text-align: center;
-  /* background-color: #b50202; // red */
   background-color: #02a249;
   color: white;
   height: 100%;
+  overflow: auto;
   font-style: italic;
   text-transform: uppercase;
 }
@@ -13,8 +13,8 @@
 }
 
 .App-header {
-  background-color: #333;
-  padding: 5px;
+  background-color: #292828;
+  padding: 5px 15px;
   color: white;
 }
 
@@ -22,9 +22,29 @@
   font-size: 1.5em;
 }
 
-.App-intro {
+.App-content {
   font-size: 20px;
   line-height: 1.1em;
+  padding: 0 0 10px;
+}
+
+.videoPlaylistLink {
+  color: red;
+  font-size: 22px;
+  -webkit-text-fill-color: #f50000;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: black;
+}
+
+.loadingPlaylist {
+  color: #f3f300;
+}
+
+.error {
+  color: red;
+  -webkit-text-fill-color: #f50000;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: black;
 }
 
 span {

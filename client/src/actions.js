@@ -6,6 +6,11 @@ export const emptyState = {
   playlists: [],
 };
 
+export const emptyCredentialsState = {
+  spotify: {},
+  youtube: {},
+};
+
 export async function compilePlaylist(event) {
   const setPlaylistLoading = playlistsIndex => (
     new Promise((resolve) => {
@@ -84,6 +89,6 @@ export function fetchSpotifyPlaylists() {
       });
     })
     .catch((error) => {
-      this.setState(Object.assign(emptyState, {error: error.message}));
+      this.setState(Object.assign(emptyCredentialsState, {error: error.message}));
     });
 }

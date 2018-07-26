@@ -58,28 +58,28 @@ class App extends Component {
             spotify music videos
           </h1>
           <p>
-            Developed by
+            Developed by&nbsp;
             <a href='https://github.com/rubyonrials'
               target='_blank' rel='noopener noreferrer'>
-              &nbsp;matt
+              matt
             </a>
           </p>
         </header>
-        <div className="App-intro">
+        <div className="App-content">
           {Object.keys(spotify).length === 0 &&
             <div>
-              <p>Step 1: Log in to Spotify</p>
+              <p className="App-instruction">Step 1: Log in to Spotify</p>
               <a href={`${BASE_API_URL}/spotify-login`}>Log in</a>
             </div>
           }
 
           {error &&
-            <p style={{color: 'red'}}>{error}</p>
+            <p className="error">{error}</p>
           }
 
-          {playlists.length > 0 &&
+          {Object.keys(spotify).length !== 0 && playlists.length > 0 &&
             <React.Fragment>
-              <p>Step 2: Select a playlist</p>
+              <p className="App-instruction">Step 2: Select a playlist</p>
               {playlists.map(playlist =>
                 <PlaylistLineItem
                   key={playlist.id}

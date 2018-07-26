@@ -23,7 +23,7 @@ class PlaylistLineItem extends Component<Props> {
     return (
       <div>
         <span style={{margin: '10px'}}>{playlist.name}</span>
-        <span>Generating music video playlist...</span>
+        <span className="loadingPlaylist">Generating music video playlist...</span>
       </div>
     );
   }
@@ -34,7 +34,7 @@ class PlaylistLineItem extends Component<Props> {
     return (
       <div>
         <span style={{margin: '10px'}}>{playlist.name}</span>
-        <a href={playlist.youtube.url} target='_blank'>
+        <a href={playlist.youtube.url} target='_blank' className="videoPlaylistLink">
           Watch music videos
         </a>
       </div>
