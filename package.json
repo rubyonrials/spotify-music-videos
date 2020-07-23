@@ -13,8 +13,7 @@
   },
   "scripts": {
     "build": "babel index.js -d build --presets es2015",
-    "start": "node build/index.js",
-    "heroku-postbuild": "yarn build && cd client && yarn && yarn run build",
-    "server": "yarn build && yarn start"
+    "start": "npm run build && node build/index.js",
+    "heroku-postbuild": "npm run build && cd client && npm install && npm run build"
   }
 }

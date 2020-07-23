@@ -134,7 +134,7 @@ async function createYoutubePlaylist(playlistName) {
       resource: {
         snippet: {
           title: `Music videos: ${playlistName}`,
-          description: 'A playlist created by spotify-music-videos',
+          description: 'A playlist created by spotifymusicvideos.com',
         },
         status: {
           privacyStatus: 'unlisted',
@@ -271,7 +271,9 @@ app.get('/compile-playlist', async (req, res) => {
     const youtubePlaylistUrl = await makeYoutubePlaylist(tracks, playlistName);
     return res.json(youtubePlaylistUrl);
   } catch (error) {
-    return res.json({error});
+    console.log('Server error:');
+    console.log(error);
+    return res.json({error: "Oops! The site messed up (code 001)."});
   }
 });
 
@@ -288,6 +290,5 @@ app.listen(port, () => {
 // catch expired token, other error handling
 // good spinner that shows each video being added
 // detect non music videos
-// new design
 // youtube oauth
 // timeouts for huge playlists

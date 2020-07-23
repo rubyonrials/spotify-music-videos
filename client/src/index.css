@@ -8,3 +8,12 @@ html, body, #root {
   height: 100%;
   overflow: auto;
 }
+
+.playlist {
+  margin: 10px;
+  font-transform: none;
+}
+
+.error {
+  margin: 18px;
+}

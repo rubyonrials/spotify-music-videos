@@ -58,10 +58,10 @@ class App extends Component {
             spotify music videos
           </h1>
           <p>
-            Developed by&nbsp;
+            Created specifically for you by&nbsp;
             <a href='https://github.com/rubyonrials'
               target='_blank' rel='noopener noreferrer'>
-              matt
+              Matt
             </a>
           </p>
         </header>
@@ -73,9 +73,12 @@ class App extends Component {
             </div>
           }
 
-          {error &&
-            <p className="error">{error}</p>
-          }
+          {error && (
+            <div className="error">
+              <span>{error}</span>
+              <span>Please try again, or contact Matt.</span>
+            </div>
+          )}
 
           {Object.keys(spotify).length !== 0 && playlists.length > 0 &&
             <React.Fragment>
