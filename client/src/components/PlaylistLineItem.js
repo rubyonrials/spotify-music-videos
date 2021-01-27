@@ -18,8 +18,6 @@ class PlaylistLineItem extends Component<Props> {
   }
 
   render() {
-    console.log('props');
-    console.log(this.props);
     const {playlist} = this.props;
     const youtube = this.props.playlist.youtube;
     if (!youtube) return this.renderDefault();

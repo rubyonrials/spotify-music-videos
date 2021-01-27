@@ -64,6 +64,21 @@ class App extends Component {
               Matt
             </a>
           </p>
+          <p className='youtube-disclaimer'>
+            By using this tool, you acknowledge that this app uses YouTube API Services, and agree to the
+            &nbsp;
+            <a href='https://www.youtube.com/t/terms' target='_blank' rel='noopener noreferrer'>
+              YouTube ToS
+            </a>
+            &nbsp;and&nbsp;
+            <a href='https://policies.google.com/privacy' target='_blank' rel='noopener noreferrer'>
+              Google privacy policy
+            </a>
+            .&nbsp;
+            <span className='youtube-disclaimer-important'>
+              NO ACCESS TO YOUR YOUTUBE ACCOUNT IS NEEDED
+            </span>.
+          </p>
         </header>
         <div className="App-content">
           {Object.keys(spotify).length === 0 &&
