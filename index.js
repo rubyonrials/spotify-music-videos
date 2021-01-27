@@ -30,6 +30,11 @@ const youtube = google.youtube({
 function makeRequest(requestData) {
   return new Promise((resolve, reject) => {
     request(requestData, (error, response, body) => {
+      // console.log('--- RESPONSE ---');
+      // console.log(error);
+      // console.log(response);
+      // console.log(body);
+      // console.log('--- END RESPONSE ---');
       if (!error && response.statusCode === 200) {
         resolve(body);
       } else {
@@ -103,6 +108,8 @@ async function getTracks(accessToken, userId, playlistId) {
     },
     json: true,
   };
+  // console.log('--- GET TRACKS ---');
+  // console.log(requestData);
 
   const requestResponse = await makeRequest(requestData);
   return requestResponse.items.map(track => ({
@@ -114,7 +121,7 @@ async function getTracks(accessToken, userId, playlistId) {
 async function searchYoutube(track) {
   const res = await youtube.search.list({
     part: 'id,snippet',
-    q: `${track.trackName} ${track.artistName} music video`,
+    q: `${track.trackName} ${track.artistName} official music video`,
     maxResults: 3,
     type: 'video',
   });
@@ -225,10 +232,14 @@ app.get('/spotify-login-callback', async (req, res) => {
   }
 
   try {
+    const resp = await getAuthTokens(code);
+    // console.log('----SPOTIFY LOGIN CALLBACK----');
+    // console.log(resp);
     const {
       access_token: spotifyAccessToken,
       refresh_token: spotifyRefreshToken,
-    } = await getAuthTokens(code);
+    // } = await getAuthTokens(code);
+    } = resp;
     const {id: spotifyUserId} = await getUserId(spotifyAccessToken);
 
     return res.redirect(process.env.BASE_UI_URL + '?' +
@@ -268,6 +279,8 @@ app.get('/compile-playlist', async (req, res) => {
 
   try {
     const tracks = await getTracks(accessToken, userId, playlistId);
+    // console.log('--- GOT TRACKS ---');
+    // console.log(tracks);
     const youtubePlaylistUrl = await makeYoutubePlaylist(tracks, playlistName);
     return res.json(youtubePlaylistUrl);
   } catch (error) {
