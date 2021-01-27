@@ -20,20 +20,26 @@
 
 .App-title {
   font-size: 1.5em;
+  margin-bottom: 0;
+}
+
+.App-madeby {
+  text-transform: initial;
+  font-style: initial;
+  color: #ffffff94;
+  margin-top: 0;
+  margin-bottom: 20px;
 }
 
 .App-content {
   font-size: 20px;
   line-height: 1.1em;
-  padding: 0 0 10px;
+  padding: 15px 30px;
 }
 
-.videoPlaylistLink {
-  color: red;
+a.videoPlaylistLink {
+  color: #d00000;
   font-size: 22px;
-  -webkit-text-fill-color: #f50000;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: black;
 }
 
 .loadingPlaylist {
@@ -41,14 +47,30 @@
 }
 
 .error {
-  color: red;
-  -webkit-text-fill-color: #f50000;
-  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: black;
+  color: #faff00;
 }
 
 span {
   display: inline-block;
+}
+
+.playlist-container {
+  text-transform: initial;
+  font-style: initial;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.playlist-name {
+  display: block;
+  margin: 10px;
+}
+
+.playlist-li {
+  padding: 17px 9px;
+  flex: 1 1 0px;
+  border: 1px solid #ffffff3b;
+  min-width: 300px;
 }
 
 .youtube-disclaimer {
@@ -57,6 +79,8 @@ span {
   max-width: 600px;
   text-align: left;
   margin: 0 auto 10px;
+  text-transform: initial;
+  font-style: initial;
 }
 
 .youtube-disclaimer-important {

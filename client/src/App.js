@@ -57,15 +57,15 @@ class App extends Component {
           <h1 className="App-title">
             spotify music videos
           </h1>
-          <p>
-            Created specifically for you by&nbsp;
+          <p className="App-madeby">
+            Made for you by&nbsp;
             <a href='https://github.com/rubyonrials'
               target='_blank' rel='noopener noreferrer'>
               Matt
             </a>
           </p>
           <p className='youtube-disclaimer'>
-            By using this tool, you acknowledge that this app uses YouTube API Services, and agree to the
+            By using this tool, you acknowledge the use of YouTube API Services, and agree to the
             &nbsp;
             <a href='https://www.youtube.com/t/terms' target='_blank' rel='noopener noreferrer'>
               YouTube ToS
@@ -98,12 +98,14 @@ class App extends Component {
           {Object.keys(spotify).length !== 0 && playlists.length > 0 &&
             <React.Fragment>
               <p className="App-instruction">Step 2: Select a playlist</p>
-              {playlists.map(playlist =>
-                <PlaylistLineItem
-                  key={playlist.id}
-                  playlist={playlist}
-                  compilePlaylist={this.compilePlaylist}
-                />)}
+              <div className='playlist-container'>
+                {playlists.map(playlist =>
+                  <PlaylistLineItem
+                    key={playlist.id}
+                    playlist={playlist}
+                    compilePlaylist={this.compilePlaylist}
+                  />)}
+              </div>
             </React.Fragment>
           }
         </div>

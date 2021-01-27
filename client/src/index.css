@@ -9,11 +9,6 @@ html, body, #root {
   overflow: auto;
 }
 
-.playlist {
-  margin: 10px;
-  font-transform: none;
-}
-
 .error {
   margin: 18px;
 }

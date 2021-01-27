@@ -6,14 +6,16 @@ class PlaylistLineItem extends Component<Props> {
     const {playlist} = this.props;
 
     return (
-      <a
-        href='#'
-        onClick={this.props.compilePlaylist}
-        data-id={playlist.id}
-        data-name={playlist.name}
-        style={{display: 'block', margin: '10px'}}>
-        {playlist.name}
-      </a>
+      <div className='playlist-li'>
+        <a
+          href='#'
+          onClick={this.props.compilePlaylist}
+          data-id={playlist.id}
+          data-name={playlist.name}
+          className='playlist-name'>
+          {playlist.name}
+        </a>
+      </div>
     );
   }
 
@@ -26,7 +28,7 @@ class PlaylistLineItem extends Component<Props> {
 
     return (
       <div className='playlist-li'>
-        <span className="playlist">{playlist.name}</span>
+        <span className="playlist-name">{playlist.name}</span>
 
         {youtube.loading && (
           <span className="loadingPlaylist">Generating music video playlist...</span>
