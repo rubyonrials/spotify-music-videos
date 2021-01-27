@@ -38,7 +38,7 @@
 }
 
 a.videoPlaylistLink {
-  color: #d00000;
+  color: -webkit-link;
   font-size: 22px;
 }
 
