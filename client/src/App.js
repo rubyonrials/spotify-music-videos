@@ -91,7 +91,7 @@ class App extends Component {
           {error && (
             <div className="error">
               <span>{error}</span>
-              <span>Please try again, or contact Matt.</span>
+              <span> Please try again, or contact Matt.</span>
             </div>
           )}
 

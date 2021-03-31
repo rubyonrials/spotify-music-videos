@@ -18,7 +18,6 @@ const youtubeAuth = new google.auth.OAuth2(
 );
 
 youtubeAuth.setCredentials({
-  access_token: process.env.YOUTUBE_ACCESS_TOKEN,
   refresh_token: process.env.YOUTUBE_REFRESH_TOKEN,
 });
 
