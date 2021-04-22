@@ -8,9 +8,9 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').load();
 }
 
-const SPOTIFY_PERMISSIONS = ['user-library-read', 'playlist-read-collaborative', 'playlist-read-private'];
-const YOUTUBE_PERMISSIONS = ['https://www.googleapis.com/auth/youtube'];
+const SPOTIFY_PERMISSIONS = ['playlist-read-private'];
 
+// user-library-read', 'playlist-read-collaborative', '
 const youtubeAuth = new google.auth.OAuth2(
   process.env.YOUTUBE_CLIENT_ID,
   process.env.YOUTUBE_CLIENT_SECRET,
@@ -86,9 +86,9 @@ function getUserId(accessToken) {
   return makeRequest(requestData);
 }
 
-function getSpotifyPlaylists(accessToken, offset) {
+function getSpotifyPlaylists(accessToken, userId, offset) {
   const requestData = {
-    url: `https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`,
+    url: `https://api.spotify.com/v1/users/${userId}/playlists?limit=50&offset=${offset}`,
     method: 'GET',
     headers: {
       Authorization: 'Bearer ' + (accessToken.toString('base64')),
@@ -117,6 +117,24 @@ async function getTracks(accessToken, userId, playlistId) {
   }));
 }
 
+function looksLikeMusicVideo(item) {
+  // console.log('search result');
+  // console.log(item);
+
+  const OFFICIAL = 'official';
+  const VIDEO = 'video';
+  const VEVO = 'VEVO';
+  const LYRIC = 'lyric';
+
+  const {title, channelTitle} = item.snippet;
+  const lTitle = title.toLowerCase();
+  const lChannelTitle = channelTitle.toLowerCase();
+
+  return channelTitle.includes(VEVO) ||
+    (lChannelTitle.includes(OFFICIAL) && lChannelTitle.includes(VIDEO) && !lChannelTitle.includes(LYRIC)) ||
+    (lTitle.includes(OFFICIAL) && lTitle.includes(VIDEO) && !lTitle.includes(LYRIC));
+}
+
 async function searchYoutube(track) {
   const res = await youtube.search.list({
     part: 'id,snippet',
@@ -124,13 +142,13 @@ async function searchYoutube(track) {
     maxResults: 3,
     type: 'video',
   });
-  return res.data.items[0].id.videoId;
+
+  const musicVideo = res.data.items.find(item => looksLikeMusicVideo(item));
+  return musicVideo ? musicVideo.id.videoId : null;
 }
 
 function getYoutubeVideoIds(tracks) {
-  return Promise.all(
-    tracks.map(track => searchYoutube(track)),
-  );
+  return Promise.all(tracks.map(track => searchYoutube(track)).filter(track => track));
 }
 
 async function createYoutubePlaylist(playlistName) {
@@ -254,13 +272,14 @@ app.get('/spotify-login-callback', async (req, res) => {
 
 app.get('/spotify-playlists', async (req, res) => {
   const accessToken = req.query.accessToken;
-  const offset = req.query.offset || 0;
+  const userId = req.query.userId;
+  const offset = req.query.offset || 0; // query.offset is not passed yet
   if (!accessToken || accessToken === '') {
     return res.json({error: 'access_token_missing'});
   }
 
   try {
-    return res.json(await getSpotifyPlaylists(accessToken, offset));
+    return res.json(await getSpotifyPlaylists(accessToken, userId, offset));
   } catch (error) {
     return res.json({error});
   }
