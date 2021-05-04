@@ -10,7 +10,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 const SPOTIFY_PERMISSIONS = ['playlist-read-private'];
 
-// user-library-read', 'playlist-read-collaborative', '
 const youtubeAuth = new google.auth.OAuth2(
   process.env.YOUTUBE_CLIENT_ID,
   process.env.YOUTUBE_CLIENT_SECRET,
@@ -147,71 +146,13 @@ async function searchYoutube(track) {
   return musicVideo ? musicVideo.id.videoId : null;
 }
 
-function getYoutubeVideoIds(tracks) {
-  return Promise.all(tracks.map(track => searchYoutube(track)).filter(track => track));
+async function getYoutubeVideoIds(tracks) {
+  return (await Promise.all(tracks.map(track => searchYoutube(track)))).filter(track => track);
 }
 
-async function createYoutubePlaylist(playlistName) {
-  try {
-    const res = await youtube.playlists.insert({
-      part: 'snippet,status',
-      resource: {
-        snippet: {
-          title: `Music videos: ${playlistName}`,
-          description: 'A playlist created by spotifymusicvideos.com',
-        },
-        status: {
-          privacyStatus: 'unlisted',
-        },
-      },
-    });
-
-    return res.data.id;
-  } catch (error) {
-    return process.env.YOUTUBE_DEFAULT_PLAYLIST_ID;
-  }
-}
-
-function addToYoutubePlaylist(playlistId, videoId) {
-  youtube.playlistItems.insert({
-    part: 'snippet',
-    resource: {
-      snippet: {
-        playlistId,
-        resourceId: {
-          videoId,
-          kind: 'youtube#video',
-        },
-      },
-    },
-  });
-}
-
-// TODO: speed this up. dont wait 600, wait until previous execution finishes
-async function insertVideosIntoPlaylist(playlistId, videoIds) {
-  let index = 0;
-
-  // use for, await before incrementing
-
-  return new Promise((resolve, reject) => {
-    const interval = setInterval(() => {
-      if (index === videoIds.length) {
-        clearInterval(interval);
-        resolve();
-      } else {
-        addToYoutubePlaylist(playlistId, videoIds[index]);
-        index += 1;
-      }
-    }, 600);
-  });
-}
-
-async function makeYoutubePlaylist(tracks, playlistName) {
+async function makeYoutubePlaylist(tracks) {
   const videoIds = await getYoutubeVideoIds(tracks);
-  const playlistId = await createYoutubePlaylist(playlistName);
-  await insertVideosIntoPlaylist(playlistId, videoIds);
-
-  return `https://www.youtube.com/watch?list=${playlistId}&v=${videoIds[0]}`;
+  return `https://www.youtube.com/watch_videos?video_ids=${videoIds.join()}`;
 }
 
 const app = express();
@@ -255,7 +196,6 @@ app.get('/spotify-login-callback', async (req, res) => {
     const {
       access_token: spotifyAccessToken,
       refresh_token: spotifyRefreshToken,
-    // } = await getAuthTokens(code);
     } = resp;
     const {id: spotifyUserId} = await getUserId(spotifyAccessToken);
 
@@ -289,9 +229,8 @@ app.get('/compile-playlist', async (req, res) => {
   const accessToken = req.query.accessToken;
   const userId = req.query.userId;
   const playlistId = req.query.playlistId;
-  const playlistName = req.query.playlistName;
 
-  if (!accessToken || !userId || !playlistId || !playlistName) {
+  if (!accessToken || !userId || !playlistId) {
     return res.json({error: 'params_missing'});
   }
 
@@ -299,7 +238,7 @@ app.get('/compile-playlist', async (req, res) => {
     const tracks = await getTracks(accessToken, userId, playlistId);
     // console.log('--- GOT TRACKS ---');
     // console.log(tracks);
-    const youtubePlaylistUrl = await makeYoutubePlaylist(tracks, playlistName);
+    const youtubePlaylistUrl = await makeYoutubePlaylist(tracks);
     return res.json(youtubePlaylistUrl);
   } catch (error) {
     console.log('Server error:');
@@ -320,6 +259,4 @@ app.listen(port, () => {
 // dont request all parts of tracks artist for playlist
 // catch expired token, other error handling
 // good spinner that shows each video being added
-// detect non music videos
-// youtube oauth
 // timeouts for huge playlists

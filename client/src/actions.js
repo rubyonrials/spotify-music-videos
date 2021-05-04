@@ -28,7 +28,6 @@ export async function compilePlaylist(event) {
   );
 
   const playlistId = event.target.dataset.id;
-  const playlistName = event.target.dataset.name;
   const playlistsIndex = this.state.playlists.findIndex(e => e.id === playlistId);
   const {userId, accessToken} = this.state.spotify;
 
@@ -37,8 +36,7 @@ export async function compilePlaylist(event) {
   fetch((BASE_API_URL + '/compile-playlist?' +
     'accessToken=' + accessToken +
     '&playlistId=' + playlistId +
-    '&userId=' + userId +
-    '&playlistName=' + playlistName
+    '&userId=' + userId
   ), {
     headers: {'content-type': 'application/json'},
   })
